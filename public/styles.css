@@ -1,0 +1,95 @@
+/* css/styles.css */
+
+/* Reset some default styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f0f2f5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+}
+
+/* Container for the form */
+.container {
+    background-color: #fff;
+    padding: 15px 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    width: 400px;
+    max-width: 90%;
+    text-align: center;
+}
+
+/* Organization Image */
+.container img {
+    width: 160px;
+    margin-bottom: 10px;
+}
+
+/* Form Elements */
+form {
+    display: flex;
+    flex-direction: column;
+}
+
+form input {
+    padding: 12px 15px;
+    margin: 8px 0;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+}
+
+form button {
+    padding: 12px 15px;
+    margin-top: 15px;
+    border: none;
+    border-radius: 4px;
+    background-color: #4CAF50; /* Green */
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+form button:hover {
+    background-color: #45a049;
+}
+
+/* Links */
+.form-link {
+    margin-top: 15px;
+    font-size: 14px;
+}
+
+.form-link a {
+    color: #4CAF50;
+    text-decoration: none;
+}
+
+.form-link a:hover {
+    text-decoration: underline;
+}
+
+/* .logo{
+    width:100px;
+} */
+
+
+/* Responsive Design */
+@media (max-width: 500px) {
+    .container {
+        padding: 30px 20px;
+    }
+
+    .container img {
+        width: 80px;
+    }
+}

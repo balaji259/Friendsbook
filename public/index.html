@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - YourAppName</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+
+        <img class="logo" src="logo.jpeg" alt="Organization Logo">
+
+        <h2>Welcome Back</h2>
+
+        <form id="loginForm">
+            <input type="email" id="email" name="email" placeholder="Email Address" required>
+            <input type="password" id="password" name="password" placeholder="Password" required>
+            <button type="submit">Login</button>
+        </form>
+
+        <div class="form-link">
+            Don't have an account? <a href="register.html">Register here</a>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+    <script>
+
+        const token = localStorage.getItem('token');
+
+        if (token) {
+            axios.post('/user/validateToken', { token })
+                .then((response) => {
+                    if (response.data.valid) {
+                        
+                        console.log("Token is alive !")
+                        window.location.href = "home.html";
+                    } else {
+                      
+                        localStorage.removeItem('token');
+                        alert('Session expired, please log in again.');
+                    }
+                })
+                .catch((error) => {
+                    localStorage.removeItem('token');
+                    alert('Please log in again.');
+                });
+        }
+
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const email = document.getElementById("email").value;
+            const password = document.getElementById("password").value;
+        
+            axios.post("/user/login", { email, password })
+                .then((response) => {
+                    alert('Login Successful');
+                    const token = response.data.token;
+
+             
+                    localStorage.setItem('token', token);
+
+                    
+                    window.location.href = "home.html";
+                })
+                .catch((error) => {
+                    alert('Login failed: Invalid credentials');
+                });
+        });
+    </script>
+</body>
+</html>
