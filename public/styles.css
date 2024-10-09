@@ -9,7 +9,12 @@
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #f0f2f5;
+    /* background:linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d); */
+
+     /* background: linear-gradient(135deg, #000046, #1CB5E0, #FFEDBC); */
+
+     background: linear-gradient(135deg, #003b5c, #00bcd4, #f6e58d);
+
     display: flex;
     align-items: center;
     justify-content: center;
@@ -18,8 +23,8 @@ body {
 
 /* Container for the form */
 .container {
-    background-color: #fff;
-    padding: 15px 30px;
+    background-color:#fff;
+    padding: 20px 30px;
     border-radius: 8px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     width: 400px;
@@ -52,7 +57,7 @@ form button {
     margin-top: 15px;
     border: none;
     border-radius: 4px;
-    background-color: #4CAF50; /* Green */
+    background-color: #813588; /* Green */
     color: white;
     font-size: 16px;
     cursor: pointer;
@@ -60,7 +65,7 @@ form button {
 }
 
 form button:hover {
-    background-color: #45a049;
+    background-color: #9a4c9f;
 }
 
 /* Links */
@@ -70,7 +75,7 @@ form button:hover {
 }
 
 .form-link a {
-    color: #4CAF50;
+    color: #813588;
     text-decoration: none;
 }
 
@@ -81,6 +86,32 @@ form button:hover {
 /* .logo{
     width:100px;
 } */
+
+
+
+.logo-overlay {
+    display: none; /* Hidden by default */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: white; /* Full white background */
+    z-index: 9999; /* Put it above everything */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.logo-overlay img {
+    width: 200px; /* Adjust the size of the logo */
+}
+
+h2{
+    margin-bottom:10px;
+}
+
+
 
 
 /* Responsive Design */
