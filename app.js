@@ -4,6 +4,7 @@ const bodyParser = require('body-parser');
 const connectDB = require('./db/db');
 const authRouter = require('./routes/auth');
 const postRouter=require("./routes/postRoutes");
+const cors=require('cors'); 
 // const upload = require('./routes/upload'); // Import upload middleware
 require('dotenv').config();
 
@@ -15,6 +16,10 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use(express.static(path.join(__dirname, 'public')));
 
+app.use(cors({
+  origin: 'http://localhost:8000', // Replace with your frontend URL
+  credentials: true, // Allow cookies to be sent
+}));
 // Connect to MongoDB
 connectDB();
 

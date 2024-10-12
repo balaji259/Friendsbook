@@ -7,7 +7,7 @@ const authMiddleware = require('../middleware/auth');  // Ensure correct import
 // Multer configuration for file uploads
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, './uploads');  // Path to save uploads
+        cb(null, './public/uploads');  // Path to save uploads
     },
     filename: (req, file, cb) => {
         cb(null, Date.now() + '-' + file.originalname);  // Unique filename
@@ -26,9 +26,11 @@ router.post('/create', upload.single('mediaContent'), async (req, res) => {
 
         // Determine post type
         let postType = 'text';
+        let mediaUrl = null; // Initialize mediaUrl
         if (req.file) {
             const mediaType = req.file.mimetype.split('/')[0];
             postType = mediaType === 'image' ? 'image' : 'video';
+            mediaUrl = `/uploads/${req.file.filename}`; // Correct media URL
         }
 
         // Create a new post
@@ -37,7 +39,7 @@ router.post('/create', upload.single('mediaContent'), async (req, res) => {
             postType,
             caption: captionOrText,
             content: {
-                mediaUrl: req.file ? `/uploads/${req.file.filename}` : null // Fixed the mediaUrl syntax
+                mediaUrl, // Use the constructed mediaUrl
             },
         });
 
@@ -48,8 +50,6 @@ router.post('/create', upload.single('mediaContent'), async (req, res) => {
         res.status(500).json({ error: error.message || 'Failed to create post' });
     }
 });
-
-
 
 router.get('/get', async (req, res) => {
     try {

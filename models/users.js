@@ -25,7 +25,7 @@ const userSchema = new mongoose.Schema(
     },
     profilePic: {
       type: String,
-      default: 'https://www.flaticon.com/free-icon/profile-user_64572', // URL of the user's profile picture
+      default: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRHSzDhiRYyjKd2KNCds9Jd500P2tGS5izmzw&s', // URL of the user's profile picture
     },
     bio: {
       type: String,

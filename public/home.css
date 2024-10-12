@@ -269,3 +269,121 @@ button[type="submit"]:hover {
     display: inline-block;
     vertical-align: middle;
 }
+
+/* display posts */
+/* CSS for the Posts Section */
+#post-element {
+    margin: 20px 0;
+    padding: 15px;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+#postContent {
+    width: 100%;
+    border: none;
+    border-radius: 8px;
+    padding: 10px;
+    font-size: 16px;
+    resize: none;
+    outline: none;
+    background-color: #f0f2f5;
+}
+
+.media-upload {
+    margin-top: 10px;
+}
+
+.media-upload-label {
+    display: inline-block;
+    padding: 8px 15px;
+    background-color: #007bff;
+    color: #fff;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.media-upload-label:hover {
+    background-color: #0056b3;
+}
+
+.post-btn {
+    margin-top: 15px;
+    padding: 10px 20px;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.post-btn:hover {
+    background-color: #218838;
+}
+
+/* Posts display container */
+#user-posts {
+    margin: 20px 0;
+}
+
+/* Individual post container */
+.post {
+    background-color: #fff;
+    border: 1px solid #e6e6e6;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    padding: 15px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Post header with profile pic and username */
+.post-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.profile-pic {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-right: 10px;
+}
+
+.username {
+    font-weight: bold;
+    font-size: 16px;
+    color: #333;
+}
+
+/* Post image */
+.post-image {
+    width: 100%;
+    border-radius: 8px;
+    margin-top: 10px;
+}
+
+/* Post video */
+.post-video {
+    width: 100%;
+    border-radius: 8px;
+    margin-top: 10px;
+}
+
+/* Post footer with likes, comments, and shares */
+.post-footer {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #e6e6e6;
+}
+
+.post-footer p {
+    font-size: 14px;
+    color: #555;
+    margin: 0;
+}
