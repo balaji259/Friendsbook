@@ -1,0 +1,221 @@
+//html
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Home page</title>
+        <link rel="stylesheet" href="./home.css">
+    </head>
+
+    <body>
+        <navbar>
+            <div id="nav-left">
+                <img src="logo.jpeg" alt="Friendsbook logo">
+            </div>
+            
+            <div id="nav-right">
+                <h1>FriendsBook</h1>
+                <p id="tagline">Be Social . Be Popular</p>
+
+            </div>
+            
+        </navbar>
+
+
+        <section>
+
+            <div id="sec-left">
+                <div id="sec-left-top">
+                    <button class="sec-left-button">Home</button>
+                    <button class="sec-left-button">Search</button>
+                    <button class="sec-left-button">Friends</button>
+                    <button class="sec-left-button">Notifications</button>
+                    <button class="sec-left-button">Profile</button>
+                </div>
+
+                <div id="sec-left-bottom">
+                    <button id="logout">Logout</button>
+                </div>
+                
+            </div>
+
+            <div id="sec-middle">
+                user posts
+            </div>
+
+            <div id="sec-right">
+                <div id="sec-right-top">
+                        user profile picture and user name
+                </div>
+
+                <div id="sec-right-bottom">
+                        suggestions
+                </div>
+            </div>
+        </section>
+    </body>
+</html>
+
+/css
+
+*{
+    padding:0px;
+    margin:0px;
+
+
+}
+
+body{
+    /* overflow-y: hidden;  */
+    /* overflow-x: hidden; */
+}
+
+navbar{
+    display:flex;
+    background-color:#fff;
+    box-shadow:0px 2px grey;
+    /* position:fixed; */
+    
+    
+}
+
+#nav-left{
+    width:30%;
+    /* background-color:red; */
+    /* padding-right:200px; */
+    position:relative;
+    right:70px;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+}
+
+img{
+    width:100px;
+    height:auto;
+    background-color:transparent;
+    transition:width 0.35s linear 0s;
+}
+
+
+#nav-right{
+    padding-left:200px;
+    display:flex;
+    /* background-color:green; */
+    flex-direction:column;
+    width:70%;
+    display:flex;
+    justify-content:center;
+    align-items:flex-start;
+    row-gap:10px;
+}
+
+#tagline{
+    position:relative;
+    color:green;
+}
+
+section{
+    display:flex;
+    /* flex-direction:column; */
+}
+
+#sec-left{
+    width:10%;
+    height:500px;
+    /* overflow:hidden; */
+    /* height:400px; */
+    padding:20px 40px;
+    background-color:grey;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    row-gap:20px;
+    position:fixed;
+}
+
+#sec-left-top{
+    height:75%;
+    /* background-color:red; */
+    display:flex;
+    flex-direction:column;
+    row-gap:15px;
+}
+
+#sec-left-bottom{
+    height:25%;
+    /* background-color:green; */
+    padding-bottom:55px;
+    display:flex;
+    justify-content:center;
+    align-items:flex-end;
+}
+
+.sec-left-button{
+    width:140px;
+    height:55px;
+    border:none;
+    border-radius:10px;
+    font-weight:bold;
+    font-size:14px;
+    padding:20px;
+    transition:color 0.35s linear 0s , background-color 0.35s linear 0s;
+}
+
+.sec-left-button:hover{
+    color:white;
+    background-color:purple;
+}
+
+#logout{
+    
+    width:140px;
+    height:55px;
+    border:none;
+    border-radius:10px;
+    font-weight:bold;
+    font-size:14px;
+    padding:20px;
+    transition:color 0.35s linear 0s , background-color 0.35s linear 0s;
+    
+}
+
+#logout:hover{
+    color:white;
+    background-color:rgb(228, 82, 82);
+
+}
+
+#sec-middle{
+    width:80%;
+    height:700px;
+    background-color:rgb(240, 150, 240);
+}
+
+
+#sec-right{
+    display:flex;
+    width:20%;
+    /* width:13%; */
+    flex-direction:column;
+
+}
+
+#sec-right-top{
+    width:100%;
+    height:35%;
+    background-color:green;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+
+}
+
+#sec-right-bottom{
+    width:100%;
+    height:40%;
+    background-color:blue;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+}

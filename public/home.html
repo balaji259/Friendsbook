@@ -1,1 +1,208 @@
-<h1>Home page</h1>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Home page</title>
+    <link rel="stylesheet" href="./home.css">
+</head>
+
+<body>
+    <navbar>
+        <div id="nav-left">
+            <img src="logo.jpeg" alt="Friendsbook logo">
+        </div>
+        <div id="nav-right">
+            <h1>friendsbook</h1>
+            <p id="tagline">Be Social . Be Popular</p>
+        </div>
+    </navbar>
+
+    <section>
+        <div id="sec-left">
+            <div id="sec-left-top">
+                <button class="sec-left-button">
+                    <img src="icons8-home.svg" class="icon"> Home
+                </button>
+                <button class="sec-left-button">
+                    <img src="icons8-search.svg" class="icon"> Search
+                </button>
+                <button class="sec-left-button">
+                    <img src="icons8-connections-64.png" class="icon"> Friends
+                </button>
+                <button class="sec-left-button">
+                    <img src="icons8-comments-24.png" class="icon"> Chats
+                </button>
+                <button class="sec-left-button">
+                    <img src="icons8-notifications-78.png" class="icon"> Notifications
+                </button>
+                <button class="sec-left-button">
+                    <img src="download_profile.png" class="icon"> Profile
+                </button>
+            </div>
+            <div id="sec-left-bottom">
+                <button id="logout" onclick="{
+                    localStorage.clear();
+                    window.location.href = 'index.html';
+                }">
+                    <img src="logout.png" class="icon"> Logout
+                </button>
+            </div>
+        </div>
+
+        <div id="sec-middle">
+            <div id="post-element">
+                <form id="createPostForm" enctype="multipart/form-data">
+                    <div class="post-input-container">
+                        <textarea id="postContent" name="captionOrText" placeholder="What are you thinking?" rows="4"></textarea>
+                        <div class="media-upload">
+                            <label for="postMedia" class="media-upload-label">
+                                <span>📷 Select Media</span>
+                                <input type="file" id="postMedia" name="mediaContent" accept="image/*,video/*" />
+                            </label>
+                        </div>
+                    </div>
+                    <button type="submit" class="post-btn">Post</button>
+                </form>
+            </div>
+            <div id="user-posts"></div>
+        </div>
+
+        <div id="sec-right">
+            <div id="sec-right-top">
+                user profile picture and user name
+            </div>
+            <div id="sec-right-bottom">
+                suggestions
+            </div>
+        </div>
+    </section>
+
+    <script>
+        // Handle form submission
+        document.getElementById('createPostForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const form = document.getElementById('createPostForm');
+            const formData = new FormData(form);
+            const token = localStorage.getItem('token');
+
+            if (!token) {
+                alert('No token found. Please log in again.');
+                return;
+            }
+
+            try {
+                const base64Url = token.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                }).join(''));
+                const { userId } = JSON.parse(jsonPayload);
+                
+                formData.append('userId', userId);
+
+                const response = await fetch('/posts/create', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const result = await response.json();
+                if (response.ok) {
+                    alert('Post created successfully!');
+                    form.reset();
+                    fetchPosts(); // Refresh posts
+                } else {
+                    alert('Failed to create post: ' + (result.error || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error submitting form:', error);
+                alert('Error submitting form');
+            }
+        });
+
+        // Fetch posts from the backend
+        async function fetchPosts() {
+            try {
+                const response = await fetch('/posts/get');
+                const posts = await response.json();
+                if (Array.isArray(posts)) {
+                    displayPosts(posts);
+                } else {
+                    console.error('Unexpected data format:', posts);
+                }
+            } catch (error) {
+                console.error('Error fetching posts:', error);
+            }
+        }
+
+        // Display posts on the page
+        function displayPosts(posts) {
+            const postsContainer = document.getElementById('user-posts');
+            postsContainer.innerHTML = '';
+
+            posts.forEach(post => {
+                const postElement = document.createElement('div');
+                postElement.classList.add('post');
+
+                const postHeader = document.createElement('div');
+                postHeader.classList.add('post-header');
+                
+                const profilePic = document.createElement('img');
+                profilePic.classList.add('profile-pic');
+                profilePic.src = post.user?.profilePic || 'default-profile.png';
+                profilePic.alt = post.user?.username || 'User';
+
+                const username = document.createElement('p');
+                username.classList.add('username');
+                username.textContent = post.user?.username || 'Anonymous';
+
+                postHeader.appendChild(profilePic);
+                postHeader.appendChild(username);
+                postElement.appendChild(postHeader);
+
+                if (post.postType === 'text' && post.caption) {
+                    const caption = document.createElement('p');
+                    caption.textContent = post.caption;
+                    postElement.appendChild(caption);
+                } else if (post.postType === 'image' && post.content?.mediaUrl) {
+                    const image = document.createElement('img');
+                    image.src = post.content.mediaUrl;
+                    image.alt = 'Post Image';
+                    image.classList.add('post-image');
+                    postElement.appendChild(image);
+                } else if (post.postType === 'video' && post.content?.mediaUrl) {
+                    const video = document.createElement('video');
+                    video.src = post.content.mediaUrl;
+                    video.controls = true;
+                    video.classList.add('post-video');
+                    postElement.appendChild(video);
+                }
+
+                const postFooter = document.createElement('div');
+                postFooter.classList.add('post-footer');
+
+                const likes = document.createElement('p');
+                likes.textContent = `${post.likes?.length || 0} Likes`;
+
+                const comments = document.createElement('p');
+                comments.textContent = `${post.comments?.length || 0} Comments`;
+
+                const shares = document.createElement('p');
+                shares.textContent = `${post.shares || 0} Shares`;
+
+                postFooter.appendChild(likes);
+                postFooter.appendChild(comments);
+                postFooter.appendChild(shares);
+
+                postElement.appendChild(postFooter);
+                postsContainer.appendChild(postElement);
+            });
+        }
+
+        // Fetch posts on page load
+        window.onload = fetchPosts;
+    </script>
+</body>
+</html>

@@ -77,6 +77,11 @@
 
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script>
+
+        document.querySelector('#email').value=null;
+        document.querySelector('#password').value=null;
+
+
         const token = localStorage.getItem('token');
         
         if (token) {

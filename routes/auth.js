@@ -32,6 +32,7 @@ router.post('/register', async (req, res) => {
 
         // Create a JWT payload with the username and email
         const payload = {
+            userId:newUser._id,
             username: newUser.username,
             email: newUser.email,
         };
@@ -81,22 +82,6 @@ router.post('/login', async (req, res) => {
         res.status(500).json({ message: 'Server error.' });
     }
 });
-// Validate Token Route
-// router.post('/validateToken', (req, res) => {
-//   const { token } = req.body;
-
-//   if (!token) {
-//       return res.status(400).json({ valid: false, message: 'No token provided.' });
-//   }
-
-//   jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-//       if (err) {
-//           return res.status(401).json({ valid: false, message: 'Invalid or expired token.' });
-//       }
-
-//       res.json({ valid: true, message: 'Token is valid.' });
-//   });
-// });
 
 
 

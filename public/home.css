@@ -1,0 +1,271 @@
+* {
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+body {
+    overflow-x: hidden;
+    font-family: Arial, sans-serif;
+}
+
+navbar {
+    display: flex;
+    background-color: #fff;
+    box-shadow: 0px 2px grey;
+    position: fixed;
+    width: 100%;
+    top: 0;
+    z-index: 1000;
+    padding: 10px;
+    padding-left:-10px;
+}
+
+#nav-left {
+    width: 8%;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    /* background-color: red; */
+}
+
+img {
+    width: 80px;
+    height: auto;
+}
+
+#nav-right {
+    width: 85%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    position:relative;
+    bottom:4px;
+
+    /* padding-left: 50px; */
+    /* background-color: green; */
+}
+
+#tagline {
+    font-size: 15px;
+    margin-top: 5px;
+    position:relative;
+    left:8px;
+}
+
+section {
+    display: flex;
+    margin-top: 100px; /* To leave space for the navbar */
+    height: calc(100vh - 100px); /* Full height minus navbar */
+}
+
+section{
+    display:flex;
+    /* flex-direction:column; */
+}
+
+#sec-left{
+
+    width:15%;
+    height:500px;
+    /* overflow:hidden; */
+    /* height:400px; */
+    padding:15px 40px;
+    /* background-color:grey; */
+    background-color: rgb(0, 0, 0);
+
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    row-gap:10px;
+    position:fixed;
+}
+
+#sec-left-top{
+    height:75%;
+    /* background-color:red; */
+    display:flex;
+    flex-direction:column;
+    row-gap:15px;
+}
+
+#sec-left-bottom{
+    height:25%;
+    /* background-color:green; */
+    padding-top:35px;
+    display:flex;
+    justify-content:center;
+    align-items:bottom;
+    /* border: 2px solid green; */
+}
+
+.sec-left-button{
+    display:flex;
+    justify-content:space-evenly;
+    align-items:center;
+    width:140px;
+    height:35px;
+    border:none;
+    border-radius:10px;
+    background-color: transparent;
+    color:white;
+    font-weight:bold;
+    font-size:14px;
+    padding:20px 10px;
+    transition:color 0.35s linear 0s , background-color 0.35s linear 0s;
+}
+
+.sec-left-button:hover{
+    color:white;
+    background-color:purple;
+}
+
+#logout{
+    
+    width:140px;
+    height:55px;
+    border:none;
+    border-radius:10px;
+    display:flex;
+    justify-content:space-evenly;
+    align-items:center;
+    color:white;
+    background-color:transparent;
+    font-weight:bold;
+    font-size:14px;
+    padding:20px;
+    position:relative;
+    bottom:40px;
+    transition:color 0.35s linear 0s , background-color 0.35s linear 0s;
+    
+}
+
+.icon{
+    width:20px;
+    height:auto;
+}
+
+#logout:hover{
+    color:white;
+    background-color:rgb(235, 60, 60);
+
+}
+
+
+#sec-middle {
+    flex-grow: 1; /* Allow middle to grow */
+    margin-left: 15%; /* Make space for fixed sidebar */
+    margin-right: 30%; /* Leave space for right section */
+    background-color: rgb(240, 150, 240);
+    height: 100%;
+    overflow-y: scroll; /* Only the middle section should scroll */
+    padding: 40px;
+}
+
+#sec-right {
+    width: 30%;
+    height: 80%;
+    background-color: transparent;
+    position: fixed;
+    right: 0;
+    top: 100px; /* Below the navbar */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 10px;
+    margin-bottom:10px;
+    margin-top:10px;
+    /* border:2px solid purple; */
+}
+
+#sec-right-top {
+    height: 30%; /* 30% of the right section */
+    background-color: green;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+}
+
+#sec-right-bottom {
+    height: 60%; /* 70% of the right section */
+    background-color: blue;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom:20px;
+}
+
+
+/* //post */
+#post-element {
+    background-color: white;
+    padding: 15px; /* Reduced padding */
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+}
+
+.post-input-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px; /* Reduced gap between elements */
+}
+
+textarea#postContent {
+    width: 100%;
+    padding: 10px; /* Reduced padding inside textarea */
+    font-size: 16px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    outline: none;
+    resize: none;
+    height: 60px; /* Adjusted height to make it more compact */
+}
+
+/* Media upload styling */
+.media-upload {
+    display: inline-block;
+}
+
+.media-upload-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background-color: #e2e2e2;
+    padding: 6px 10px; /* Reduced padding */
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    color: #333;
+}
+
+/* Hide the actual file input */
+input[type="file"] {
+    display: none;
+}
+
+button[type="submit"] {
+    background-color: #007bff;
+    color: white;
+    margin-top:8px;
+    padding: 8px 12px; /* Reduced padding */
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s;
+    margin-left: 6px; /* Added margin for spacing next to media */
+}
+
+button[type="submit"]:hover {
+    background-color: #0056b3;
+}
+
+/* Aligning media upload and post button */
+.media-upload, button[type="submit"] {
+    display: inline-block;
+    vertical-align: middle;
+}
