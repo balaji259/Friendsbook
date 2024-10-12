@@ -138,71 +138,90 @@
         }
 
         // Display posts on the page
-        function displayPosts(posts) {
-            const postsContainer = document.getElementById('user-posts');
-            postsContainer.innerHTML = '';
+// Display posts on the page
+function displayPosts(posts) {
+    const postsContainer = document.getElementById('user-posts');
+    postsContainer.innerHTML = '';
 
-            posts.forEach(post => {
-                const postElement = document.createElement('div');
-                postElement.classList.add('post');
+    posts.forEach(post => {
+        const postElement = document.createElement('div');
+        postElement.classList.add('post');
 
-                const postHeader = document.createElement('div');
-                postHeader.classList.add('post-header');
-                
-                const profilePic = document.createElement('img');
-                profilePic.classList.add('profile-pic');
-                profilePic.src = post.user?.profilePic || 'default-profile.png';
-                profilePic.alt = post.user?.username || 'User';
+        // Post Header
+        const postHeader = document.createElement('div');
+        postHeader.classList.add('post-header');
 
-                const username = document.createElement('p');
-                username.classList.add('username');
-                username.textContent = post.user?.username || 'Anonymous';
+        const profilePic = document.createElement('img');
+        profilePic.classList.add('profile-pic');
+        profilePic.src = post.user?.profilePic || 'default-profile.png';
+        profilePic.alt = post.user?.username || 'User';
 
-                postHeader.appendChild(profilePic);
-                postHeader.appendChild(username);
-                postElement.appendChild(postHeader);
+        const username = document.createElement('p');
+        username.classList.add('username');
+        username.textContent = post.user?.username || 'Anonymous';
 
-                if (post.postType === 'text' && post.caption) {
-                    const caption = document.createElement('p');
-                    caption.textContent = post.caption;
-                    postElement.appendChild(caption);
-                } else if (post.postType === 'image' && post.content?.mediaUrl) {
-                    const image = document.createElement('img');
-                    image.src = post.content.mediaUrl;
-                    image.alt = 'Post Image';
-                    image.classList.add('post-image');
-                    postElement.appendChild(image);
-                } else if (post.postType === 'video' && post.content?.mediaUrl) {
-                    const video = document.createElement('video');
-                    video.src = post.content.mediaUrl;
-                    video.controls = true;
-                    video.classList.add('post-video');
-                    postElement.appendChild(video);
-                }
+        postHeader.appendChild(profilePic);
+        postHeader.appendChild(username);
+        postElement.appendChild(postHeader);
 
-                const postFooter = document.createElement('div');
-                postFooter.classList.add('post-footer');
+        // Display post content based on postType
+        if (post.postType === 'text' && post.caption) {
+            const caption = document.createElement('p');
+            caption.textContent = post.caption;
+            postElement.appendChild(caption);
+        } else if (post.postType === 'image' && post.content?.mediaUrl) {
+            const image = document.createElement('img');
+            image.src = post.content.mediaUrl;
+            image.alt = 'Post Image';
+            image.classList.add('post-image');
+            postElement.appendChild(image);
 
-                const likes = document.createElement('p');
-                likes.textContent = `${post.likes?.length || 0} Likes`;
+            // Display the caption for image post
+            if (post.caption) {
+                const caption = document.createElement('p');
+                caption.textContent = post.caption;
+                postElement.appendChild(caption);
+            }
+        } else if (post.postType === 'video' && post.content?.mediaUrl) {
+            const video = document.createElement('video');
+            video.src = post.content.mediaUrl;
+            video.controls = true;
+            video.classList.add('post-video');
+            postElement.appendChild(video);
 
-                const comments = document.createElement('p');
-                comments.textContent = `${post.comments?.length || 0} Comments`;
-
-                const shares = document.createElement('p');
-                shares.textContent = `${post.shares || 0} Shares`;
-
-                postFooter.appendChild(likes);
-                postFooter.appendChild(comments);
-                postFooter.appendChild(shares);
-
-                postElement.appendChild(postFooter);
-                postsContainer.appendChild(postElement);
-            });
+            // Display the caption for video post
+            if (post.caption) {
+                const caption = document.createElement('p');
+                caption.textContent = post.caption;
+                postElement.appendChild(caption);
+            }
         }
 
-        // Fetch posts on page load
-        window.onload = fetchPosts;
+        // Post Footer
+        const postFooter = document.createElement('div');
+        postFooter.classList.add('post-footer');
+
+        const likes = document.createElement('p');
+        likes.textContent = `${post.likesCount || 0} Likes`;
+
+        const comments = document.createElement('p');
+        comments.textContent = `${post.comments?.length || 0} Comments`;
+
+        const shares = document.createElement('p');
+        shares.textContent = `${post.shares || 0} Shares`;
+
+        postFooter.appendChild(likes);
+        postFooter.appendChild(comments);
+        postFooter.appendChild(shares);
+
+        postElement.appendChild(postFooter);
+        postsContainer.appendChild(postElement);
+    });
+}
+
+// Fetch posts on page load
+window.onload = fetchPosts;
+
     </script>
 </body>
 </html>
