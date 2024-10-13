@@ -51,6 +51,55 @@ router.post('/create', upload.single('mediaContent'), async (req, res) => {
     }
 });
 
+// router.get('/get', async (req, res) => {
+//     try {
+//         // Fetch posts and populate user and comment user fields
+//         const posts = await Post.find({})
+//             .populate('user', 'username profilePic') // Populate user details for each post
+//             .populate('comments.user', 'username profilePic') // Populate user details for comments
+//             .sort({ createdAt: -1 }); // Sort posts by newest first
+        
+//         // Prepare the response data
+//         const formattedPosts = posts.map(post => ({
+            
+//             postId: post._id, // Include postId here
+//             user: {
+
+//                 profilePic: post.user.profilePic,
+//                 username: post.user.username,
+//             },
+//             postType: post.postType,
+//             caption: post.caption,
+//             content: {
+//                 mediaUrl: post.content.mediaUrl
+//             },
+//             likesCount: post.likes.length,
+//             comments: post.comments.map(comment => ({
+//                 user: {
+//                     profilePic: comment.user.profilePic,
+//                     username: comment.user.username,
+//                 },
+//                 text: comment.text,
+//                 createdAt: comment.createdAt,
+//             })),
+//             shares: post.shares,
+//             createdAt: post.createdAt,
+//         }));
+        
+
+//         // Send the formatted posts as JSON response
+//         res.json(formattedPosts);
+//     } catch (error) {
+//         console.error(error);
+//         res.status(500).json({ error: 'Failed to fetch posts' });
+//     }
+// });
+
+
+//likecomment share
+
+// Like a post
+
 router.get('/get', async (req, res) => {
     try {
         // Fetch posts and populate user and comment user fields
@@ -61,9 +110,10 @@ router.get('/get', async (req, res) => {
         
         // Prepare the response data
         const formattedPosts = posts.map(post => ({
+            postId: post._id, // Include postId here
             user: {
-                profilePic: post.user.profilePic,
-                username: post.user.username,
+                profilePic: post.user?.profilePic || 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRHSzDhiRYyjKd2KNCds9Jd500P2tGS5izmzw&s', // Default profile pic
+                username: post.user?.username || 'Unknown User',
             },
             postType: post.postType,
             caption: post.caption,
@@ -72,9 +122,12 @@ router.get('/get', async (req, res) => {
             },
             likesCount: post.likes.length,
             comments: post.comments.map(comment => ({
-                user: {
+                user: comment.user ? {
                     profilePic: comment.user.profilePic,
                     username: comment.user.username,
+                } : {
+                    profilePic: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRHSzDhiRYyjKd2KNCds9Jd500P2tGS5izmzw&s', // Default profile pic
+                    username: 'Unknown User',
                 },
                 text: comment.text,
                 createdAt: comment.createdAt,
@@ -90,5 +143,84 @@ router.get('/get', async (req, res) => {
         res.status(500).json({ error: 'Failed to fetch posts' });
     }
 });
+
+
+
+router.post('/like/:postId', authMiddleware, async (req, res) => {
+    const { postId } = req.params;
+    const userId = req.user._id; // Assuming you're using auth middleware to get the user ID
+
+    try {
+        const post = await Post.findById(postId);
+        if (!post) {
+            return res.status(404).json({ error: 'Post not found' });
+        }
+
+        // Toggle like
+        if (post.likes.includes(userId)) {
+            // User already liked the post, so remove like
+            post.likes.pull(userId);
+        } else {
+            // User has not liked the post, so add like
+            post.likes.push(userId);
+        }
+
+        await post.save();
+        res.status(200).json({ message: 'Like updated', likesCount: post.likes.length });
+    } catch (error) {
+        console.error('Error liking post:', error);
+        res.status(500).json({ error: 'Failed to update like' });
+    }
+});
+
+// Add a comment to a post
+router.post('/comment/:postId', authMiddleware, async (req, res) => {
+    const { postId } = req.params;
+    const { text } = req.body; // Get the comment text
+
+    try {
+        const post = await Post.findById(postId);
+        if (!post) {
+            return res.status(404).json({ error: 'Post not found' });
+        }
+
+        // Create a new comment
+        const comment = {
+            user: req.user._id, // Assuming user ID is set in req.user by auth middleware
+            text,
+        };
+
+        post.comments.push(comment);
+        await post.save();
+        res.status(201).json({ message: 'Comment added', comments: post.comments });
+    } catch (error) {
+        console.error('Error adding comment:', error);
+        res.status(500).json({ error: 'Failed to add comment' });
+    }
+});
+
+// Share a post
+router.post('/share/:postId', authMiddleware, async (req, res) => {
+    const { postId } = req.params;
+
+    try {
+        const post = await Post.findById(postId);
+        if (!post) {
+            return res.status(404).json({ error: 'Post not found' });
+        }
+
+        post.shares += 1; // Increment share count
+        await post.save();
+        res.status(200).json({ message: 'Post shared', shares: post.shares });
+    } catch (error) {
+        console.error('Error sharing post:', error);
+        res.status(500).json({ error: 'Failed to share post' });
+    }
+});
+
+
+
+
+
 
 module.exports = router;
