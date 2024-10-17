@@ -4,6 +4,7 @@ const bodyParser = require('body-parser');
 const connectDB = require('./db/db');
 const authRouter = require('./routes/auth');
 const postRouter=require("./routes/postRoutes");
+const userRouter=require("./routes/user")
 const cors=require('cors'); 
 // const upload = require('./routes/upload'); // Import upload middleware
 require('dotenv').config();
@@ -26,6 +27,7 @@ connectDB();
 // Routes
 app.use('/user', authRouter);
 app.use('/posts',postRouter);
+app.use('/user',userRouter);
 
 // Media Upload Route
 
@@ -35,7 +37,7 @@ app.use('/posts',postRouter);
 // });
 
 // Start the server
-const PORT = process.env.PORT || 8000;
+const PORT = process.env.PORT || 7000;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });

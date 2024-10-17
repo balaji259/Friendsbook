@@ -32,7 +32,7 @@ const userSchema = new mongoose.Schema(
       trim: true,
       default: '', // A short bio for the user
     },
-    postsCount: {
+    postsCount: {   
       type: Number,
       default: 0, // Number of posts created by the user
     },

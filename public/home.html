@@ -1,8 +1,11 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Home page</title>
     <link rel="stylesheet" href="./home.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 </head>
 
 <body>
@@ -68,170 +71,325 @@
 
         <div id="sec-right">
             <div id="sec-right-top">
-                user profile picture and user name
+                <img id="profilePic" src="" alt="Profile Picture" style="width: 50px; height: 50px; border-radius: 10px;">
+            
+                <p id="username">Username</p>
             </div>
+            
             <div id="sec-right-bottom">
-                suggestions
+                Suggestions
             </div>
         </div>
     </section>
 
     <script>
-        
-    // Handle form submission
-    document.getElementById('createPostForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
 
-        const form = document.getElementById('createPostForm');
-        const formData = new FormData(form);
-        const token = localStorage.getItem('token');
+document.addEventListener('DOMContentLoaded', () => {
+    const token = localStorage.getItem('token');
 
-        if (!token) {
-            alert('No token found. Please log in again.');
-            return;
-        }
+    if (!token) {
+        alert('No token found. Please log in again.');
+        return;
+    }
 
+    // Function to fetch and display user details
+    async function fetchUserDetails() {
         try {
-            const base64Url = token.split('.')[1];
-            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-            const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-            }).join(''));
-            const { userId } = JSON.parse(jsonPayload);
-            
-            formData.append('userId', userId);
-
-            const response = await fetch('/posts/create', {
-                method: 'POST',
-                body: formData,
+            const response = await fetch('/user/getdetails', {
+                method: 'GET',
                 headers: {
-                    'Authorization': `Bearer ${token}`
+                    'Authorization': `Bearer ${token}` // Send token in Authorization header
                 }
             });
 
-            const result = await response.json();
             if (response.ok) {
-                alert('Post created successfully!');
-                form.reset();
-                fetchPosts(); // Refresh posts
-            } else {
-                alert('Failed to create post: ' + (result.error || 'Unknown error'));
-            }
-        } catch (error) {
-            console.error('Error submitting form:', error);
-            alert('Error submitting form');
-        }
-    });
+                const data = await response.json();
 
-    // Fetch posts from the backend
-    async function fetchPosts() {
-        try {
-            const response = await fetch('/posts/get');
-        
-            const posts = await response.json();
-            console.log(posts);
-            if (Array.isArray(posts)) {
-                displayPosts(posts);
+                // Update the profile section with the fetched data
+                document.getElementById('profilePic').src = data.profilePic || 'default-profile.png';
+                // document.getElementById('fullname').textContent = data.fullname || 'No Name';
+                document.getElementById('username').textContent = `@${data.username}`;
             } else {
-                console.error('Unexpected data format:', posts);
+                alert('Failed to fetch user details.');
             }
         } catch (error) {
-            console.error('Error fetching posts:', error);
+            console.error('Error fetching user details:', error);
+            alert('Error fetching user details');
         }
     }
 
-    // Display posts on the page
-    function displayPosts(posts) {
-        const postsContainer = document.getElementById('user-posts');
-        postsContainer.innerHTML = '';
+    // Call the function to fetch user details
+    fetchUserDetails();
+});
 
-        posts.forEach(post => {
-            const postElement = document.createElement('div');
-            postElement.classList.add('post');
+        // Handle form submission
+        document.getElementById('createPostForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
 
-            const postHeader = document.createElement('div');
-            postHeader.classList.add('post-header');
+            const form = document.getElementById('createPostForm');
+            const formData = new FormData(form);
+            const token = localStorage.getItem('token');
 
-            const profilePic = document.createElement('img');
-            profilePic.classList.add('profile-pic');
-            profilePic.src = post.user?.profilePic || 'default-profile.png';
-            profilePic.alt = post.user?.username || 'User';
-
-            const username = document.createElement('p');
-            username.classList.add('username');
-            username.textContent = post.user?.username || 'Anonymous';
-
-            postHeader.appendChild(profilePic);
-            postHeader.appendChild(username);
-            postElement.appendChild(postHeader);
-
-            if (post.postType === 'text' && post.caption) {
-                const caption = document.createElement('p');
-                caption.textContent = post.caption;
-                postElement.appendChild(caption);
-            } else if (post.postType === 'image' && post.content?.mediaUrl) {
-                const image = document.createElement('img');
-                image.src = post.content.mediaUrl;
-                image.alt = 'Post Image';
-                image.classList.add('post-image');
-                postElement.appendChild(image);
-            } else if (post.postType === 'video' && post.content?.mediaUrl) {
-                const video = document.createElement('video');
-                video.src = post.content.mediaUrl;
-                video.controls = true;
-                video.classList.add('post-video');
-                postElement.appendChild(video);
+            if (!token) {
+                alert('No token found. Please log in again.');
+                return;
             }
 
-            // Post Footer with buttons
-            const postFooter = document.createElement('div');
-            postFooter.classList.add('post-footer');
+            try {
+                const base64Url = token.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                }).join(''));
+                const { userId } = JSON.parse(jsonPayload);
+                
+                formData.append('userId', userId);
 
-            // Like Button
-            const likeButton = document.createElement('button');
-            likeButton.classList.add('post-btn', 'like-btn');
-            likeButton.innerHTML = `<i class="fa fa-thumbs-up"></i> Like (${post.likesCount || 0})`;
-            likeButton.onclick = () => handleLike(post._id);  // Pass post ID correctly
-            postFooter.appendChild(likeButton);
+                const response = await fetch('/posts/create', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
 
-            // Comment Button
-            const commentButton = document.createElement('button');
-            commentButton.classList.add('post-btn', 'comment-btn');
-            commentButton.innerHTML = `<i class="fa fa-comment"></i> Comment (${post.comments.length || 0})`;
-            commentButton.onclick = () => handleComment(post._id);  // Pass post ID correctly
-            postFooter.appendChild(commentButton);
-
-            // Share Button
-            const shareButton = document.createElement('button');
-            shareButton.classList.add('post-btn', 'share-btn');
-            shareButton.innerHTML = `<i class="fa fa-share"></i> Share (${post.shares || 0})`;
-            shareButton.onclick = () => handleShare(post._id);  // Pass post ID correctly
-            postFooter.appendChild(shareButton);
-
-            postElement.appendChild(postFooter);
-            postsContainer.appendChild(postElement);
+                const result = await response.json();
+                if (response.ok) {
+                    alert('Post created successfully!');
+                    form.reset();
+                    fetchPosts(); // Refresh posts
+                } else {
+                    alert('Failed to create post: ' + (result.error || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error submitting form:', error);
+                alert('Error submitting form');
+            }
         });
+
+        // Fetch posts from the backend
+        async function fetchPosts() {
+            try {
+                const response = await fetch('/posts/get');
+            
+                const posts = await response.json();
+                console.log(posts);
+                if (Array.isArray(posts)) {
+                    displayPosts(posts);
+                } else {
+                    console.error('Unexpected data format:', posts);
+                }
+            } catch (error) {
+                console.error('Error fetching posts:', error);
+            }
+        }
+
+        // Display posts on the page
+        function displayPosts(posts) {
+    const postsContainer = document.getElementById('user-posts');
+    postsContainer.innerHTML = '';
+
+    posts.forEach(post => {
+        const postElement = document.createElement('div');
+        postElement.classList.add('post');
+
+        const postHeader = document.createElement('div');
+        postHeader.classList.add('post-header');
+
+        const profilePic = document.createElement('img');
+        profilePic.classList.add('profile-pic');
+        profilePic.src = post.user?.profilePic || 'default-profile.png';
+        profilePic.alt = post.user?.username || 'User';
+
+        const username = document.createElement('p');
+        username.classList.add('username');
+        username.textContent = post.user?.username || 'Anonymous';
+
+        postHeader.appendChild(profilePic);
+        postHeader.appendChild(username);
+        postElement.appendChild(postHeader);
+
+        // Post content (text, image, video)
+        if (post.postType === 'text' && post.caption) {
+            const caption = document.createElement('p');
+            caption.textContent = post.caption;
+            postElement.appendChild(caption);
+        } else if (post.postType === 'image' && post.content?.mediaUrl) {
+            const image = document.createElement('img');
+            image.src = post.content.mediaUrl;
+            image.alt = 'Post Image';
+            image.classList.add('post-image');
+            postElement.appendChild(image);
+        } else if (post.postType === 'video' && post.content?.mediaUrl) {
+            const video = document.createElement('video');
+            video.src = post.content.mediaUrl;
+            video.controls = true;
+            video.classList.add('post-video');
+            postElement.appendChild(video);
+        }
+
+        // Post Footer with Like, Comment, and Share buttons
+        const postFooter = document.createElement('div');
+        postFooter.classList.add('post-footer');
+
+        // Like Button
+        const likeButton = document.createElement('button');
+        likeButton.classList.add('post-btn', 'like-btn');
+        likeButton.id = `like-button-${post.postId}`;
+        likeButton.innerHTML = `<i class="fa fa-thumbs-up"></i> Like (${post.likesCount || 0})`;
+        likeButton.onclick = () => toggleLike(post.postId, likeButton);
+        postFooter.appendChild(likeButton);
+
+        // Comment Button
+        const commentButton = document.createElement('button');
+        commentButton.classList.add('post-btn', 'comment-btn');
+        commentButton.innerHTML = `<i class="fa fa-comment"></i> Comment (${post.comments.length || 0})`;
+        commentButton.onclick = () => openCommentSection(post.postId);  // Open comment section
+        postFooter.appendChild(commentButton);
+
+        // Share Button
+        const shareButton = document.createElement('button');
+        shareButton.classList.add('post-btn', 'share-btn');
+        shareButton.innerHTML = `<i class="fa fa-share"></i> Share (${post.shares || 0})`;
+        shareButton.onclick = () => handleShare(post.postId);
+        postFooter.appendChild(shareButton);
+
+        // Append the footer to the post element
+        postElement.appendChild(postFooter);
+
+        // Comment section (initially hidden)
+        const commentSection = document.createElement('div');
+        commentSection.classList.add('comment-section');
+        commentSection.id = `comment-section-${post.postId}`;
+        commentSection.style.display = 'none';
+
+        const commentForm = document.createElement('form');
+        commentForm.classList.add('comment-form');
+        commentForm.onsubmit = (e) => handleCommentSubmit(e, post.postId); // Handle form submit for comment
+
+        const commentInput = document.createElement('input');
+        commentInput.classList.add('comment-input');
+        commentInput.type = 'text';
+        commentInput.placeholder = 'Add a comment...';
+        commentForm.appendChild(commentInput);
+
+        const commentSubmit = document.createElement('button');
+        commentSubmit.classList.add('comment-submit');
+        commentSubmit.type = 'submit';
+        commentSubmit.textContent = 'Post';
+        commentForm.appendChild(commentSubmit);
+
+        commentSection.appendChild(commentForm);
+
+        // Display existing comments
+        const commentsList = document.createElement('div');
+        commentsList.classList.add('comments-list');
+        post.comments.forEach(comment => {
+            const commentElement = document.createElement('div');
+            commentElement.classList.add('comment');
+            commentElement.innerHTML = `<strong>${comment.user.username}:</strong> ${comment.text}`;
+            commentsList.appendChild(commentElement);
+        });
+        commentSection.appendChild(commentsList);
+
+        // Append comment section to post element
+        postElement.appendChild(commentSection);
+
+        // Append the post to the container
+        postsContainer.appendChild(postElement);
+    });
+}
+
+// Function to toggle like status
+async function toggleLike(postId, likeButton) {
+    const token = localStorage.getItem('token');
+    if (!token) {
+        alert('No token found. Please log in again.');
+        return;
     }
 
-    async function handleLike(postId) {
-        console.log(`Like for post: ${postId}`);
-        // Add functionality to send a request to your backend for liking the post.
+    try {
+        const response = await fetch(`/posts/like/${postId}`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+            }
+        });
+
+        const result = await response.json();
+        if (response.ok) {
+            const updatedLikesCount = result.likesCount;
+            likeButton.innerHTML = `<i class="fa fa-thumbs-up"></i> Like (${updatedLikesCount})`;
+        } else {
+            alert('Failed to toggle like.');
+        }
+    } catch (error) {
+        console.error('Error toggling like:', error);
+    }
+}
+
+// Function to handle comments (toggle comment section)
+function openCommentSection(postId) {
+    const commentSection = document.getElementById(`comment-section-${postId}`);
+    commentSection.style.display = commentSection.style.display === 'none' ? 'block' : 'none';
+}
+
+// Function to handle comment submission
+async function handleCommentSubmit(e, postId) {
+    e.preventDefault();
+    const token = localStorage.getItem('token');
+    if (!token) {
+        alert('No token found. Please log in again.');
+        return;
     }
 
-    async function handleComment(postId) {
-        console.log(`Comment for post: ${postId}`);
-        // Add functionality to send a request to your backend for commenting on the post.
+    const form = e.target;
+    const commentInput = form.querySelector('.comment-input');
+    const commentText = commentInput.value;
+
+    if (!commentText.trim()) {
+        alert('Comment cannot be empty.');
+        return;
     }
 
-    async function handleShare(postId) {
-        console.log(`Share for post: ${postId}`);
-        // Add functionality to send a request to your backend for sharing the post.
+    try {
+        const response = await fetch(`/posts/comment/${postId}`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ text: commentText })
+        });
+
+        const result = await response.json();
+        if (response.ok) {
+            // Update comment section with the new comment
+            const commentsList = form.closest('.comment-section').querySelector('.comments-list');
+            const newCommentElement = document.createElement('div');
+            newCommentElement.classList.add('comment');
+            newCommentElement.innerHTML = `<strong>${result.user.username}:</strong> ${result.text}`;
+            commentsList.appendChild(newCommentElement);
+
+            // Clear the input field
+            commentInput.value = '';
+        } else {
+            alert('Failed to post comment.');
+        }
+    } catch (error) {
+        console.error('Error posting comment:', error);
     }
+}
 
-    // Fetch posts on page load
-    fetchPosts();
-</script>
+// Function to handle sharing
+function handleShare(postId) {
+    alert(`Post ${postId} shared!`);  // For now, just show an alert
+}
 
-    
+
+       
+        fetchPosts(); // Initial fetch to load posts
+    </script>
 </body>
 </html>
