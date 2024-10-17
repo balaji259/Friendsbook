@@ -190,6 +190,18 @@ document.addEventListener('DOMContentLoaded', () => {
     postsContainer.innerHTML = '';
 
     posts.forEach(post => {
+
+        //added
+        console.log(`post`);
+        console.log(post); // Inspect the post object structure here
+    // const userId = post.user && post.user._id;
+    const userId = post.userId && post.userId._id;
+    const postId = post.postId;
+    console.log(`User ID: ${userId}, Post ID: ${postId}`);
+
+    //till this
+
+
         const postElement = document.createElement('div');
         postElement.classList.add('post');
 
@@ -209,24 +221,40 @@ document.addEventListener('DOMContentLoaded', () => {
         postHeader.appendChild(username);
         postElement.appendChild(postHeader);
 
-        // Post content (text, image, video)
+
+
         if (post.postType === 'text' && post.caption) {
-            const caption = document.createElement('p');
-            caption.textContent = post.caption;
-            postElement.appendChild(caption);
-        } else if (post.postType === 'image' && post.content?.mediaUrl) {
-            const image = document.createElement('img');
-            image.src = post.content.mediaUrl;
-            image.alt = 'Post Image';
-            image.classList.add('post-image');
-            postElement.appendChild(image);
-        } else if (post.postType === 'video' && post.content?.mediaUrl) {
-            const video = document.createElement('video');
-            video.src = post.content.mediaUrl;
-            video.controls = true;
-            video.classList.add('post-video');
-            postElement.appendChild(video);
-        }
+    const caption = document.createElement('p');
+    caption.textContent = post.caption;
+    postElement.appendChild(caption);
+} else if (post.postType === 'image' && post.content?.mediaUrl) {
+    const image = document.createElement('img');
+    image.src = post.content.mediaUrl;
+    image.alt = 'Post Image';
+    image.classList.add('post-image');
+    postElement.appendChild(image);
+
+    // Add caption below the image
+    if (post.caption) {
+        const caption = document.createElement('p');
+        caption.textContent = post.caption;
+        postElement.appendChild(caption);
+    }
+} else if (post.postType === 'video' && post.content?.mediaUrl) {
+    const video = document.createElement('video');
+    video.src = post.content.mediaUrl;
+    video.controls = true;
+    video.classList.add('post-video');
+    postElement.appendChild(video);
+
+    // Add caption below the video
+    if (post.caption) {
+        const caption = document.createElement('p');
+        caption.textContent = post.caption;
+        postElement.appendChild(caption);
+    }
+}
+
 
         // Post Footer with Like, Comment, and Share buttons
         const postFooter = document.createElement('div');
@@ -237,7 +265,11 @@ document.addEventListener('DOMContentLoaded', () => {
         likeButton.classList.add('post-btn', 'like-btn');
         likeButton.id = `like-button-${post.postId}`;
         likeButton.innerHTML = `<i class="fa fa-thumbs-up"></i> Like (${post.likesCount || 0})`;
-        likeButton.onclick = () => toggleLike(post.postId, likeButton);
+        // likeButton.onclick = () => toggleLike(post.userId,post.postId, likeButton);
+        // When creating the like button in `displayPosts` function:
+        // const userId = post.userId && post.userId._id; 
+likeButton.onclick = () => toggleLike(userId, post.postId, likeButton);
+
         postFooter.appendChild(likeButton);
 
         // Comment Button
@@ -301,7 +333,8 @@ document.addEventListener('DOMContentLoaded', () => {
 }
 
 // Function to toggle like status
-async function toggleLike(postId, likeButton) {
+// Function to toggle like status
+async function toggleLike(userId, postId, likeButton) {
     const token = localStorage.getItem('token');
     if (!token) {
         alert('No token found. Please log in again.');
@@ -309,7 +342,7 @@ async function toggleLike(postId, likeButton) {
     }
 
     try {
-        const response = await fetch(`/posts/like/${postId}`, {
+        const response = await fetch(`/posts/like/${userId}/${postId}`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${token}`,
@@ -328,6 +361,7 @@ async function toggleLike(postId, likeButton) {
         console.error('Error toggling like:', error);
     }
 }
+
 
 // Function to handle comments (toggle comment section)
 function openCommentSection(postId) {

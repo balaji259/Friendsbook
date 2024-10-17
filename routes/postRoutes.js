@@ -51,98 +51,6 @@ router.post('/create', upload.single('mediaContent'), async (req, res) => {
     }
 });
 
-// router.get('/get', async (req, res) => {
-//     try {
-//         // Fetch posts and populate user and comment user fields
-//         const posts = await Post.find({})
-//             .populate('user', 'username profilePic') // Populate user details for each post
-//             .populate('comments.user', 'username profilePic') // Populate user details for comments
-//             .sort({ createdAt: -1 }); // Sort posts by newest first
-        
-//         // Prepare the response data
-//         const formattedPosts = posts.map(post => ({
-            
-//             postId: post._id, // Include postId here
-//             user: {
-
-//                 profilePic: post.user.profilePic,
-//                 username: post.user.username,
-//             },
-//             postType: post.postType,
-//             caption: post.caption,
-//             content: {
-//                 mediaUrl: post.content.mediaUrl
-//             },
-//             likesCount: post.likes.length,
-//             comments: post.comments.map(comment => ({
-//                 user: {
-//                     profilePic: comment.user.profilePic,
-//                     username: comment.user.username,
-//                 },
-//                 text: comment.text,
-//                 createdAt: comment.createdAt,
-//             })),
-//             shares: post.shares,
-//             createdAt: post.createdAt,
-//         }));
-        
-
-//         // Send the formatted posts as JSON response
-//         res.json(formattedPosts);
-//     } catch (error) {
-//         console.error(error);
-//         res.status(500).json({ error: 'Failed to fetch posts' });
-//     }
-// });
-
-
-//likecomment share
-
-// Like a post
-
-// router.get('/get', async (req, res) => {
-//     try {
-//         // Fetch posts and populate user and comment user fields
-//         const posts = await Post.find({})
-//             .populate('user', 'username profilePic') // Populate user details for each post
-//             .populate('comments.user', 'username profilePic') // Populate user details for comments
-//             .sort({ createdAt: -1 }); // Sort posts by newest first
-        
-//         // Prepare the response data
-//         const formattedPosts = posts.map(post => ({
-//             postId: post._id, // Include postId here
-//             user: {
-//                 profilePic: post.user?.profilePic || 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRHSzDhiRYyjKd2KNCds9Jd500P2tGS5izmzw&s', // Default profile pic
-//                 username: post.user?.username || 'Unknown User',
-//             },
-//             postType: post.postType,
-//             caption: post.caption,
-//             content: {
-//                 mediaUrl: post.content.mediaUrl
-//             },
-//             likesCount: post.likes.length,
-//             comments: post.comments.map(comment => ({
-//                 user: comment.user ? {
-//                     profilePic: comment.user.profilePic,
-//                     username: comment.user.username,
-//                 } : {
-//                     profilePic: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRHSzDhiRYyjKd2KNCds9Jd500P2tGS5izmzw&s', // Default profile pic
-//                     username: 'Unknown User',
-//                 },
-//                 text: comment.text,
-//                 createdAt: comment.createdAt,
-//             })),
-//             shares: post.shares,
-//             createdAt: post.createdAt,
-//         }));
-        
-//         // Send the formatted posts as JSON response
-//         res.json(formattedPosts);
-//     } catch (error) {
-//         console.error(error);
-//         res.status(500).json({ error: 'Failed to fetch posts' });
-//     }
-// });
 
 router.get('/get', async (req, res) => {
     const userId = req.user ? req.user._id : null; // Optional authentication check
@@ -155,6 +63,9 @@ router.get('/get', async (req, res) => {
 
         const formattedPosts = posts.map(post => ({
             postId: post._id,
+            //added
+            userId:post.user,
+
             user: {
                 profilePic: post.user?.profilePic || 'default-pic-url',
                 username: post.user?.username || 'Unknown User',
@@ -193,14 +104,17 @@ router.get('/get', async (req, res) => {
 
 // POST route to like/unlike a post
 
-router.post('/like/:postId', async (req, res) => {
-    const { postId } = req.params;
-    const { userId } = req.body; // Ensure userId is extracted from the body
-
+// Like/Unlike Post
+router.post('/like/:userId/:postId', async (req, res) => {
+    const { postId, userId } = req.params;
+    
     console.log(`postid ${postId}`);
     console.log(`userid ${userId}`);
     
     try {
+        // Convert userId to ObjectId
+        // const userIdObject = mongoose.Types.ObjectId(userId);
+
         const post = await Post.findById(postId);
         if (!post) {
             return res.status(404).json({ error: 'Post not found' });
@@ -224,6 +138,7 @@ router.post('/like/:postId', async (req, res) => {
         res.status(500).json({ error: 'Failed to update like status' });
     }
 });
+
 
 // Add a comment to a post
 // Comment route for a specific post
