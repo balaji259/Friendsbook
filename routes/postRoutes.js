@@ -142,57 +142,32 @@ router.post('/like/:userId/:postId', async (req, res) => {
 
 // Add a comment to a post
 // Comment route for a specific post
-router.post('/:postId/comment', async (req, res) => {
-    try {
-        const { postId } = req.params;
-        const { text } = req.body;
-        const userId = req.userId; // Assuming you have the userId from your JWT middleware
+// Example using Express.js
+router.post('/comment/:postId', (req, res) => {
+    const postId = req.params.postId;
+    const commentText = req.body.text;
+    const user = req.user; // Ensure you get user data from authentication
 
-        if (!text || !userId) {
-            return res.status(400).json({ error: 'Invalid request' });
-        }
+    // Save the comment to the database or perform necessary actions
+    Post.findById(postId)
+        .then(post => {
+            if (!post) return res.status(404).send({ message: 'Post not found.' });
 
-        const post = await Post.findById(postId);
-        if (!post) {
-            return res.status(404).json({ error: 'Post not found' });
-        }
-
-        const newComment = {
-            text,
-            user: userId,
-        };
-
-        post.comments.push(newComment);
-        await post.save();
-
-        const populatedComment = await Post.findOne({ _id: postId }).populate('comments.user', 'username');
-
-        res.status(201).json(populatedComment.comments.pop()); // Return the newly added comment with user details
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Internal server error' });
-    }
+            const newComment = { text: commentText, user }; // Assuming `user` contains user info
+            post.comments.push(newComment);
+            return post.save();
+        })
+        .then(updatedPost => {
+            // Send back the newly added comment
+            const lastComment = updatedPost.comments[updatedPost.comments.length - 1];
+            res.status(200).send(lastComment);
+        })
+        .catch(error => {
+            console.error('Error adding comment:', error);
+            res.status(500).send({ message: 'Error adding comment.' });
+        });
 });
 
-
-// Route to fetch comments for a specific post
-router.get('/:postId/comments', async (req, res) => {
-    try {
-        const { postId } = req.params;
-
-        // Find the post by ID
-        const post = await Post.findById(postId).populate('comments.user', 'username profilePic');
-        if (!post) {
-            return res.status(404).json({ message: 'Post not found' });
-        }
-
-        // Return comments with user details
-        res.status(200).json(post.comments);
-    } catch (error) {
-        console.error('Error fetching comments:', error);
-        res.status(500).json({ message: 'Server error', error: error.message });
-    }
-});
 
 // Share a post
 router.post('/share/:postId', authMiddleware, async (req, res) => {
