@@ -9,7 +9,7 @@ const getUserDetails = async (req, res) => {
   try {
 
     // Log the headers to see the request details
-    console.log("Headers:", JSON.stringify(req.headers, null, 2));
+    // console.log("Headers:", JSON.stringify(req.headers, null, 2));
 
     // Check if the Authorization header is present
     const authHeader = req.headers.authorization;

@@ -365,7 +365,7 @@ async function toggleLike(userId, postId, likeButton) {
 //comments
 
 // Function to create comment section
-function createCommentSection(post) {
+ function createCommentSection(post) {
     const commentSection = document.createElement('div');
     commentSection.classList.add('comment-section');
     commentSection.id = `comment-section-${post.postId}`;
@@ -392,7 +392,9 @@ function createCommentSection(post) {
     // Display existing comments
     const commentsList = document.createElement('div');
     commentsList.classList.add('comments-list');
+    // console.log('comment is '+ comment);
     post.comments.forEach(comment => {
+        // console.log('comment is '+ comment);
         const commentElement = createCommentElement(comment);
         commentsList.appendChild(commentElement);
     });
@@ -405,7 +407,7 @@ function createCommentSection(post) {
 function createCommentElement(comment) {
     const commentElement = document.createElement('div');
     commentElement.classList.add('comment');
-    commentElement.innerHTML = `<strong>${'comment.user.username'}:</strong> ${comment.text}`;
+    commentElement.innerHTML = `<strong>${comment.user.username}:</strong> ${comment.text}`;
     return commentElement;
 }
 
@@ -434,34 +436,38 @@ async function handleCommentSubmit(e, postId) {
     }
 
     try {
-        const response = await fetch(`/posts/comment/${postId}`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ text: commentText })
-        });
+    const response = await fetch(`/posts/comment/${postId}`, {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ text: commentText })
+    });
 
-        const result = await response.json();
-        if (response.ok) {
-            // Update comment section with the new comment
-            const commentsList = form.closest('.comment-section').querySelector('.comments-list');
-            const newCommentElement = createCommentElement(result);
-            commentsList.appendChild(newCommentElement);
+    const result = await response.json();
+    
+    if (response.ok) {
+        // Update comment section with the new comment
+        const commentsList = form.closest('.comment-section').querySelector('.comments-list');
+        
+        // Create a comment element using the updated result structure
+        const newCommentElement = createCommentElement(result);
+        commentsList.appendChild(newCommentElement);
 
-            // Clear the input field
-            commentInput.value = '';
+        // Clear the input field
+        commentInput.value = '';
 
-            // Scroll to the new comment
-            newCommentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        } else {
-            alert(result.message || 'Failed to post comment.');
-        }
-    } catch (error) {
-        console.error('Error posting comment:', error);
-        alert('An error occurred while posting the comment. Please try again.');
+        // Scroll to the new comment
+        newCommentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } else {
+        alert(result.message || 'Failed to post comment.');
     }
+} catch (error) {
+    console.error('Error posting comment:', error);
+    alert('An error occurred while posting the comment. Please try again.');
+}
+
 }
 
 

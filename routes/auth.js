@@ -38,7 +38,7 @@ router.post('/register', async (req, res) => {
         };
 
         // Generate a JWT token that expires in 6 hours
-        const token = jwt.sign(payload, process.env.JWT_SECRET);
+        const token = jwt.sign(payload, process.env.JWT_SECRET,{expiresIn:'30d'});
 
         // Respond with the generated token
         return res.status(201).json({
@@ -76,7 +76,7 @@ router.post('/login', async (req, res) => {
             email: user.email,
         };
         // Generate JWT token
-        const token = jwt.sign(payload, process.env.JWT_SECRET);
+        const token = jwt.sign(payload, process.env.JWT_SECRET,{expiresIn:'30d'});
 
 
         // Send token to the client

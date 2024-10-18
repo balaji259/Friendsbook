@@ -3,6 +3,7 @@ const router = express.Router();
 const multer = require('multer');
 const Post = require('../models/post');
 const authMiddleware = require('../middleware/auth');  // Ensure correct import
+const authenticateUser=require('./authenticate_user');
 
 // Multer configuration for file uploads
 const storage = multer.diskStorage({
@@ -143,30 +144,56 @@ router.post('/like/:userId/:postId', async (req, res) => {
 // Add a comment to a post
 // Comment route for a specific post
 // Example using Express.js
-router.post('/comment/:postId', (req, res) => {
+router.post('/comment/:postId', authenticateUser, async (req, res) => {
     const postId = req.params.postId;
     const commentText = req.body.text;
-    const user = req.user; // Ensure you get user data from authentication
+    const { userId, username } = req.user; // Extract user details
 
-    // Save the comment to the database or perform necessary actions
-    Post.findById(postId)
-        .then(post => {
-            if (!post) return res.status(404).send({ message: 'Post not found.' });
+    console.log(`User ID: ${userId}, Username: ${username}, Comment Text: ${commentText}`);
 
-            const newComment = { text: commentText, user }; // Assuming `user` contains user info
-            post.comments.push(newComment);
-            return post.save();
-        })
-        .then(updatedPost => {
-            // Send back the newly added comment
-            const lastComment = updatedPost.comments[updatedPost.comments.length - 1];
-            res.status(200).send(lastComment);
-        })
-        .catch(error => {
-            console.error('Error adding comment:', error);
-            res.status(500).send({ message: 'Error adding comment.' });
-        });
+    // Validate input
+    if (!commentText || !userId || !username) {
+        return res.status(400).send({ message: 'Comment text, user ID, and username are required.' });
+    }
+
+    try {
+        const post = await Post.findById(postId);
+        if (!post) return res.status(404).send({ message: 'Post not found.' });
+
+        // Create the new comment object
+        const newComment = {
+            user: userId, // Ensure this is a valid ObjectId
+            username: username, // Ensure this is a valid string
+            text: commentText, // Text content of the comment
+            createdAt: new Date() // Timestamp of comment creation
+        };
+
+        console.log("New Comment:", newComment); // Log the new comment for debugging
+
+        // Push the new comment to the comments array
+        post.comments.push(newComment);
+
+        await post.save(); // Save the updated post
+
+        // Send back the newly added comment
+        const lastComment = post.comments[post.comments.length - 1];
+        const responseComment = {
+            text: lastComment.text,
+            user: {
+                userId: lastComment.user, // This is the ObjectId
+                username: lastComment.username
+            },
+            createdAt: lastComment.createdAt // Include the createdAt timestamp
+        };
+
+        res.status(200).send(responseComment);
+    } catch (error) {
+        console.error('Error adding comment:', error.message || error);
+        res.status(500).send({ message: 'Error adding comment.', error: error.message });
+    }
 });
+
+
 
 
 // Share a post
