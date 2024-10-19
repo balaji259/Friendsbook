@@ -194,6 +194,50 @@ router.post('/comment/:postId', authenticateUser, async (req, res) => {
 });
 
 
+router.get('/:postId', async (req, res) => {
+    const { postId } = req.params;
+
+    try {
+        const post = await Post.findById(postId)
+            .populate('user', 'username profilePic')  // Populate user details
+            .populate('comments.user', 'username profilePic');  // Populate comment user details
+
+        if (!post) {
+            return res.status(404).json({ error: 'Post not found' });
+        }
+
+        // Format the post data
+        const formattedPost = {
+            postId: post._id,
+            user: {
+                profilePic: post.user?.profilePic || 'default-pic-url',
+                username: post.user?.username || 'Unknown User',
+            },
+            postType: post.postType,
+            caption: post.caption,
+            content: {
+                mediaUrl: post.content.mediaUrl,
+            },
+            likesCount: post.likes.length,
+            comments: post.comments.map(comment => ({
+                user: {
+                    profilePic: comment.user.profilePic || 'default-pic-url',
+                    username: comment.user.username || 'Unknown User',
+                },
+                text: comment.text,
+                createdAt: comment.createdAt,
+            })),
+            shares: post.shares,
+            createdAt: post.createdAt,
+        };
+
+        // Send back the post data
+        res.json(formattedPost);
+    } catch (error) {
+        console.error('Failed to fetch post:', error);
+        res.status(500).json({ error: 'Failed to fetch post' });
+    }
+});
 
 
 // Share a post
@@ -214,6 +258,7 @@ router.post('/share/:postId', authMiddleware, async (req, res) => {
         res.status(500).json({ error: 'Failed to share post' });
     }
 });
+
 
 
 
