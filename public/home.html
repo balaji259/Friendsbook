@@ -70,33 +70,7 @@
         </div>
       </div>
 
-      <!-- <div id="sec-middle">
-        <div id="post-element">
-          <form id="createPostForm" enctype="multipart/form-data">
-            <div class="post-input-container">
-              <textarea
-                id="postContent"
-                name="captionOrText"
-                placeholder="What are you thinking?"
-                rows="4"
-              ></textarea>
-              <div class="media-upload">
-                <label for="postMedia" class="media-upload-label">
-                  <span>📷 Select Media</span>
-                  <input
-                    type="file"
-                    id="postMedia"
-                    name="mediaContent"
-                    accept="image/*,video/*"
-                  />
-                </label>
-              </div>
-            </div>
-            <button type="submit" class="post-btn">Post</button>
-          </form>
-        </div>
-        <div id="user-posts"></div>
-      </div> -->
+
 
       <div id="sec-middle">
         <div id="post-element">
@@ -127,11 +101,7 @@
       </div>
 
       <div id="sec-right">
-        <!-- <div id="sec-right-top">
-                <img id="profilePic" src="" alt="Profile Picture" style="width: 50px; height: 50px; border-radius: 10px;">
-            
-                <p id="username">Username</p>
-            </div> -->
+       
 
         <div id="sec-right-bottom">Suggestions</div>
       </div>
@@ -233,154 +203,6 @@
           }
         });
 
-
-    //     const postsContainer = document.getElementById("user-posts");
-    //     postsContainer.innerHTML = "";
-
-    //     posts.forEach((post) => {
-    //       //added
-    //       console.log(`post`);
-    //       console.log(post); // Inspect the post object structure here
-    //       // const userId = post.user && post.user._id;
-    //       const userId = post.userId && post.userId._id;
-    //       const postId = post.postId;
-    //       console.log(`User ID: ${userId}, Post ID: ${postId}`);
-
-    //       //till this
-
-    //       const postElement = document.createElement("div");
-    //       postElement.classList.add("post");
-
-    //       const postHeader = document.createElement("div");
-    //       postHeader.classList.add("post-header");
-
-    //       const profilePic = document.createElement("img");
-    //       profilePic.classList.add("profile-pic");
-    //       profilePic.src = post.user?.profilePic || "default-profile.png";
-    //       profilePic.alt = post.user?.username || "User";
-
-    //       const username = document.createElement("p");
-    //       username.classList.add("username");
-    //       username.textContent = post.user?.username || "Anonymous";
-
-    //       postHeader.appendChild(profilePic);
-    //       postHeader.appendChild(username);
-    //       postElement.appendChild(postHeader);
-
-    //       if (post.postType === "text" && post.caption) {
-    //         const caption = document.createElement("p");
-    //         caption.textContent = post.caption;
-    //         postElement.appendChild(caption);
-    //       } else if (post.postType === "image" && post.content?.mediaUrl) {
-    //         const image = document.createElement("img");
-    //         image.src = post.content.mediaUrl;
-    //         image.alt = "Post Image";
-    //         image.classList.add("post-image");
-    //         postElement.appendChild(image);
-
-    //         // Add caption below the image
-    //         if (post.caption) {
-    //           const caption = document.createElement("p");
-    //           caption.textContent = post.caption;
-    //           postElement.appendChild(caption);
-    //         }
-    //       } else if (post.postType === "video" && post.content?.mediaUrl) {
-    //         const video = document.createElement("video");
-    //         video.src = post.content.mediaUrl;
-    //         video.controls = true;
-    //         video.classList.add("post-video");
-    //         postElement.appendChild(video);
-
-    //         // Add caption below the video
-    //         if (post.caption) {
-    //           const caption = document.createElement("p");
-    //           caption.textContent = post.caption;
-    //           postElement.appendChild(caption);
-    //         }
-    //       }
-
-    //       // Post Footer with Like, Comment, and Share buttons
-    //       const postFooter = document.createElement("div");
-    //       postFooter.classList.add("post-footer");
-
-    //       // Like Button
-    //       const likeButton = document.createElement("button");
-    //       likeButton.classList.add("post-btn", "like-btn");
-    //       likeButton.id = `like-button-${post.postId}`;
-    //       likeButton.innerHTML = `<i class="fa fa-thumbs-up"></i> Like (${
-    //         post.likesCount || 0
-    //       })`;
-    //       // likeButton.onclick = () => toggleLike(post.userId,post.postId, likeButton);
-    //       // When creating the like button in `displayPosts` function:
-    //       // const userId = post.userId && post.userId._id;
-    //       likeButton.onclick = () =>
-    //         toggleLike(userId, post.postId, likeButton);
-
-    //       postFooter.appendChild(likeButton);
-
-    //       // Comment Button
-    //       const commentButton = document.createElement("button");
-    //       commentButton.classList.add("post-btn", "comment-btn");
-    //       commentButton.innerHTML = `<i class="fa fa-comment"></i> Comment (${
-    //         post.comments.length || 0
-    //       })`;
-    //       commentButton.onclick = () => openCommentSection(post.postId); // Open comment section
-    //       postFooter.appendChild(commentButton);
-
-    //       // Share Button
-    //       const shareButton = document.createElement("button");
-    //       shareButton.classList.add("post-btn", "share-btn");
-    //       shareButton.innerHTML = `<i class="fa fa-share"></i> Share (${
-    //         post.shares || 0
-    //       })`;
-    //       shareButton.onclick = () => handleShare(post.postId);
-    //       postFooter.appendChild(shareButton);
-
-    //       // Append the footer to the post element
-    //       postElement.appendChild(postFooter);
-
-    //       // Comment section (initially hidden)
-    //       const commentSection = document.createElement("div");
-    //       commentSection.classList.add("comment-section");
-    //       commentSection.id = `comment-section-${post.postId}`;
-    //       commentSection.style.display = "none";
-
-    //       const commentForm = document.createElement("form");
-    //       commentForm.classList.add("comment-form");
-    //       commentForm.onsubmit = (e) => handleCommentSubmit(e, post.postId); // Handle form submit for comment
-
-    //       const commentInput = document.createElement("input");
-    //       commentInput.classList.add("comment-input");
-    //       commentInput.type = "text";
-    //       commentInput.placeholder = "Add a comment...";
-    //       commentForm.appendChild(commentInput);
-
-    //       const commentSubmit = document.createElement("button");
-    //       commentSubmit.classList.add("comment-submit");
-    //       commentSubmit.type = "submit";
-    //       commentSubmit.textContent = "Post";
-    //       commentForm.appendChild(commentSubmit);
-
-    //       commentSection.appendChild(commentForm);
-
-    //       // Display existing comments
-    //       const commentsList = document.createElement("div");
-    //       commentsList.classList.add("comments-list");
-    //       post.comments.forEach((comment) => {
-    //         const commentElement = document.createElement("div");
-    //         commentElement.classList.add("comment");
-    //         commentElement.innerHTML = `<strong>${comment.user.username}:</strong> ${comment.text}`;
-    //         commentsList.appendChild(commentElement);
-    //       });
-    //       commentSection.appendChild(commentsList);
-
-    //       // Append comment section to post element
-    //       postElement.appendChild(commentSection);
-
-    //       // Append the post to the container
-    //       postsContainer.appendChild(postElement);
-    //     });
-    //   }
     async function fetchPosts() {
     try {
       const response = await fetch("/posts/get");
@@ -443,7 +265,7 @@
         dropdownMenu.id = `dropdown-menu-${postId}`;
         dropdownMenu.innerHTML = `
             <a href="#" onclick="savePost('${postId}')">Save Post</a>
-            <a href="#" onclick="reportPost('${postId}')">Report Post</a>
+            <a href="#" onclick="reportPost('${postId}', '${userId}')">Report Post</a>
         `;
         dropdownMenu.style.display = "none"; // Initially hide the menu
 
@@ -736,6 +558,12 @@
       });
   }
     
+
+  function reportPost(postId, userId) {
+    // Redirect to the report page with query parameters
+    window.location.href = `report.html?postId=${postId}&userId=${userId}`;
+}
+
 
                                      
 

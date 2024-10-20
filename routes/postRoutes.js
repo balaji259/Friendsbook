@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const Post = require('../models/post');
+const Report=require('../models/report');
 const authMiddleware = require('../middleware/auth');  // Ensure correct import
 const authenticateUser=require('./authenticate_user');
 
@@ -232,6 +233,28 @@ router.get('/:postId', async (req, res) => {
         res.status(500).json({ error: "Failed to fetch post" });
     }
 });
+
+
+router.post("/report", async (req, res) => {
+    try {
+        const { userId, postId, reason } = req.body;
+
+        const newReport = new Report({
+            userId,
+            postId,
+            reason,
+            reportedAt: new Date()
+        });
+
+        await newReport.save();
+
+        res.json({ success: true, message: "Report saved successfully!" });
+    } catch (error) {
+        console.error("Failed to save report:", error);
+        res.status(500).json({ success: false, message: "Failed to submit report." });
+    }
+});
+
 
 
 // Share a post

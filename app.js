@@ -5,6 +5,8 @@ const connectDB = require('./db/db');
 const authRouter = require('./routes/auth');
 const postRouter=require("./routes/postRoutes");
 const userRouter=require("./routes/user")
+
+
 const cors=require('cors'); 
 // const upload = require('./routes/upload'); // Import upload middleware
 require('dotenv').config();
@@ -28,6 +30,7 @@ connectDB();
 app.use('/user', authRouter);
 app.use('/posts',postRouter);
 app.use('/user',userRouter);
+
 
 // Media Upload Route
 

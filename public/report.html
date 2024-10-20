@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Report Post</title>
+    <style>
+        /* Basic reset */
+body, h2, form, input, textarea, button {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+
+
+/* Set the background color and center the container */
+body {
+    background: linear-gradient(135deg, #003b5c, #00bcd4, #f6e58d);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+/* Container styling */
+.report-container {
+    background-color: #fff;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 600px;
+}
+
+/* Header */
+.report-container h2 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 20px;
+    font-size: 24px;
+}
+
+/* Form styling */
+form {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Label styling */
+form label {
+    font-size: 16px;
+    color: #333;
+    margin-bottom: 8px;
+}
+
+/* Textarea styling */
+form textarea {
+    resize: vertical;
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    min-height: 100px;
+    margin-bottom: 20px;
+    transition: border-color 0.3s;
+}
+
+/* Textarea focus */
+form textarea:focus {
+    border-color: #007bff;
+    outline: none;
+}
+
+/* Button styling */
+form button {
+    background-color: #007bff;
+    color: #fff;
+    padding: 12px;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+/* Button hover effect */
+form button:hover {
+    background-color: #0056b3;
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+    .report-container {
+        padding: 20px;
+    }
+
+    form textarea {
+        font-size: 14px;
+    }
+
+    form button {
+        padding: 10px;
+        font-size: 14px;
+    }
+}
+
+    </style>
+
+
+</head>
+<body>
+    <div class="report-container">
+        <h2>Report Post</h2>
+        <form id="report-form">
+            <input type="hidden" id="user-id" name="userId">
+            <input type="hidden" id="post-id" name="postId">
+            
+            <label for="reason">Reason for Reporting:</label>
+            <textarea id="reason" name="reason" placeholder="Describe why you're reporting this post..." required></textarea>
+            
+            <button type="submit">Submit Report</button>
+        </form>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const postId = urlParams.get("postId");
+    const userId = urlParams.get("userId");
+
+    document.getElementById("post-id").value = postId;
+    document.getElementById("user-id").value = userId;
+
+    const reportForm = document.getElementById("report-form");
+    reportForm.addEventListener("submit", handleReportSubmit);
+});
+
+function handleReportSubmit(event) {
+    event.preventDefault();
+    
+    const userId = document.getElementById("user-id").value;
+    const postId = document.getElementById("post-id").value;
+    const reason = document.getElementById("reason").value;
+
+    const reportData = {
+        userId,
+        postId,
+        reason
+    };
+
+    // Send the data to your backend server
+    fetch("posts/report", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(reportData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert("Report submitted successfully!");
+            window.location.href = "home.html"; // Redirect back to posts page
+        } else {
+            alert("Failed to submit report. Please try again.");
+        }
+    })
+    .catch((error) => {
+        console.error("Error:", error);
+        alert("An error occurred. Please try again later.");
+    });
+}
+
+    </script>
+</body>
+</html>
