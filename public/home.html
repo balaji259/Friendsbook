@@ -723,19 +723,24 @@
         }
       }
 
-      // Function to handle sharing
+   
+   
       function copyPostIdToClipboard(postId){
-    const postUrl = `${window.location.origin}/posts/${postId}`;
-    navigator.clipboard.writeText(postUrl).then(() => {
-        alert("Post URL copied to clipboard!"); // Feedback to the user
-    }).catch(err => {
-        console.error("Failed to copy: ", err);
-    });
-      }
-
       
+      
+      const postUrl = `http://localhost:7000/single-post.html?postId=${postId}`;
+      navigator.clipboard.writeText(postUrl).then(() => {
+          alert("Post link copied to clipboard! Share it anywhere.");
+      }).catch(err => {
+          console.error('Failed to copy: ', err);
+      });
+  }
+    
 
-      fetchPosts(); // Initial fetch to load posts
+                                     
+
+
+      fetchPosts();
     </script>
   </body>
 </html>
