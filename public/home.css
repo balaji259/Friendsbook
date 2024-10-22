@@ -177,7 +177,7 @@ section{
     flex-grow: 1; /* Allow middle to grow */
     margin-left: 20%; /* Make space for fixed sidebar */
     margin-right: 24%; /* Leave space for right section */
-    background-color:rgb(48,48,48);
+    background-color:white;
     height: 100%;
     overflow-y: scroll; /* Only the middle section should scroll */
     padding: 40px;

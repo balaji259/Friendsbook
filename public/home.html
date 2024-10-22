@@ -203,20 +203,28 @@
           }
         });
 
-    async function fetchPosts() {
+        async function fetchPosts() {
     try {
-      const response = await fetch("/posts/get");
-      const posts = await response.json();
-      console.log(posts);
-      if (Array.isArray(posts)) {
-        displayPosts(posts);
-      } else {
-        console.error("Unexpected data format:", posts);
-      }
+        const response = await fetch("/posts/get");
+        console.log(`Response is: ${response.status} - ${response.statusText}`);
+        
+        // Check if response is ok (status code 200-299)
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const posts = await response.json();
+        console.log(posts);
+        
+        if (Array.isArray(posts)) {
+            displayPosts(posts); // Assuming displayPosts is defined elsewhere
+        } else {
+            console.error("Unexpected data format:", posts);
+        }
     } catch (error) {
-      console.error("Error fetching posts:", error);
+        console.error("Error fetching posts:", error);
     }
-  }
+}
 
   // Display posts on the page
   function displayPosts(posts) {
@@ -264,7 +272,7 @@
         dropdownMenu.classList.add("dropdown-menu");
         dropdownMenu.id = `dropdown-menu-${postId}`;
         dropdownMenu.innerHTML = `
-            <a href="#" onclick="savePost('${postId}')">Save Post</a>
+            <a href="#" onclick="savePost('${postId}','${userId}')">Save Post</a>
             <a href="#" onclick="reportPost('${postId}', '${userId}')">Report Post</a>
         `;
         dropdownMenu.style.display = "none"; // Initially hide the menu
@@ -382,13 +390,32 @@
     menu.style.display = menu.style.display === "block" ? "none" : "block";
   }
 
-  function savePost(postId) {
-    alert(`Post ${postId} saved!`);
-  }
+ 
 
-  function reportPost(postId) {
-    alert(`Post ${postId} reported!`);
-  }
+  function savePost(postId, userId) {
+    const saveData = { userId, postId };
+
+    fetch('/posts/save', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(saveData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert("Post saved successfully!");
+        } else {
+            alert("Failed to save post. " + data.message);
+        }
+    })
+    .catch(error => {
+        console.error("Error:", error);
+        alert("An error occurred. Please try again.");
+    });
+}
+
 
   document.addEventListener("click", (event) => {
     if (!event.target.closest(".post-options")) {
@@ -431,120 +458,205 @@
       //comments
 
       // Function to create comment section
-      function createCommentSection(post) {
-        const commentSection = document.createElement("div");
-        commentSection.classList.add("comment-section");
-        commentSection.id = `comment-section-${post.postId}`;
-        commentSection.style.display = "none";
+     // Function to create the comment section for a specific post
+function createCommentSection(post) {
+    const commentSection = document.createElement("div");
+    commentSection.classList.add("comment-section");
+    commentSection.id = `comment-section-${post.postId}`;
+    commentSection.style.display = "none";
 
-        const commentForm = document.createElement("form");
-        commentForm.classList.add("comment-form");
-        commentForm.onsubmit = (e) => handleCommentSubmit(e, post.postId); // Handle form submit for comment
+    // Create the form for adding new comments
+    const commentForm = document.createElement("form");
+    commentForm.classList.add("comment-form");
+    commentForm.onsubmit = (e) => handleCommentSubmit(e, post.postId);
 
-        const commentInput = document.createElement("input");
-        commentInput.classList.add("comment-input");
-        commentInput.type = "text";
-        commentInput.placeholder = "Add a comment...";
-        commentForm.appendChild(commentInput);
+    const commentInput = document.createElement("input");
+    commentInput.classList.add("comment-input");
+    commentInput.type = "text";
+    commentInput.placeholder = "Add a comment...";
+    commentForm.appendChild(commentInput);
 
-        const commentSubmit = document.createElement("button");
-        commentSubmit.classList.add("comment-submit");
-        commentSubmit.type = "submit";
-        commentSubmit.textContent = "Post";
-        commentForm.appendChild(commentSubmit);
+    const commentSubmit = document.createElement("button");
+    commentSubmit.classList.add("comment-submit");
+    commentSubmit.type = "submit";
+    commentSubmit.textContent = "Post";
+    commentForm.appendChild(commentSubmit);
 
-        commentSection.appendChild(commentForm);
+    commentSection.appendChild(commentForm);
 
-        // Display existing comments
-        const commentsList = document.createElement("div");
-        commentsList.classList.add("comments-list");
-        // console.log('comment is '+ comment);
-        post.comments.forEach((comment) => {
-          // console.log('comment is '+ comment);
-          const commentElement = createCommentElement(comment);
-          commentsList.appendChild(commentElement);
+    // Display existing comments
+    const commentsList = document.createElement("div");
+    commentsList.classList.add("comments-list");
+
+    post.comments.forEach((comment) => {
+        const commentElement = createCommentElement(comment, post.postId);
+        commentsList.appendChild(commentElement);
+    });
+    commentSection.appendChild(commentsList);
+
+    return commentSection;
+}
+
+// Function to create an individual comment element, including replies
+function createCommentElement(comment, postId) {
+    const commentElement = document.createElement("div");
+    commentElement.classList.add("comment");
+    commentElement.innerHTML = `<strong>${comment.username}:</strong> ${comment.text}`;
+
+    // Reply button
+    const replyButton = document.createElement("button");
+    replyButton.classList.add("reply-button");
+    replyButton.textContent = "Reply";
+    replyButton.onclick = () => toggleReplyForm(comment._id);
+    commentElement.appendChild(replyButton);
+
+    // Reply form
+    const replyForm = document.createElement("form");
+    replyForm.classList.add("reply-form");
+    replyForm.id = `reply-form-${comment._id}`;
+    replyForm.style.display = "none";
+    replyForm.onsubmit = (e) => handleReplySubmit(e, postId, comment._id);
+
+    const replyInput = document.createElement("input");
+    replyInput.classList.add("reply-input");
+    replyInput.type = "text";
+    replyInput.placeholder = "Add a reply...";
+    replyForm.appendChild(replyInput);
+
+    const replySubmit = document.createElement("button");
+    replySubmit.classList.add("reply-submit");
+    replySubmit.type = "submit";
+    replySubmit.textContent = "Reply";
+    replyForm.appendChild(replySubmit);
+
+    commentElement.appendChild(replyForm);
+
+    // Create a list of nested replies (if any)
+    if (comment.replies && comment.replies.length > 0) {
+        const repliesList = document.createElement("div");
+        repliesList.classList.add("replies-list");
+
+        comment.replies.forEach((reply) => {
+            const replyElement = createCommentElement(reply, postId);
+            repliesList.appendChild(replyElement);
         });
-        commentSection.appendChild(commentsList);
 
-        return commentSection;
-      }
+        commentElement.appendChild(repliesList);
+    }
 
-      // Function to create an individual comment element
-      function createCommentElement(comment) {
-        const commentElement = document.createElement("div");
-        commentElement.classList.add("comment");
-        commentElement.innerHTML = `<strong>${comment.user.username}:</strong> ${comment.text}`;
-        return commentElement;
-      }
+    return commentElement;
+}
 
-      // Function to toggle the comment section visibility
-      function openCommentSection(postId) {
-        const commentSection = document.getElementById(
-          `comment-section-${postId}`
-        );
-        commentSection.style.display =
-          commentSection.style.display === "none" ? "block" : "none";
-      }
+// Function to toggle reply form visibility
+function toggleReplyForm(commentId) {
+    const replyForm = document.getElementById(`reply-form-${commentId}`);
+    replyForm.style.display = replyForm.style.display === "none" ? "block" : "none";
+}
 
-      // Function to handle comment submission
-      async function handleCommentSubmit(e, postId) {
-        e.preventDefault();
-        const token = localStorage.getItem("token");
-        if (!token) {
-          alert("No token found. Please log in again.");
-          return;
-        }
+// Function to handle comment submission
+async function handleCommentSubmit(e, postId) {
+    e.preventDefault();
+    const token = localStorage.getItem("token");
+    if (!token) {
+        alert("No token found. Please log in again.");
+        return;
+    }
 
-        const form = e.target;
-        const commentInput = form.querySelector(".comment-input");
-        const commentText = commentInput.value.trim();
+    const form = e.target;
+    const commentInput = form.querySelector(".comment-input");
+    const commentText = commentInput.value.trim();
 
-        if (!commentText) {
-          alert("Comment cannot be empty.");
-          return;
-        }
+    if (!commentText) {
+        alert("Comment cannot be empty.");
+        return;
+    }
 
-        try {
-          const response = await fetch(`/posts/comment/${postId}`, {
+    try {
+        const response = await fetch(`/posts/comment/${postId}`, {
             method: "POST",
             headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
             },
             body: JSON.stringify({ text: commentText }),
-          });
+        });
 
-          const result = await response.json();
-
-          if (response.ok) {
-            // Update comment section with the new comment
-            const commentsList = form
-              .closest(".comment-section")
-              .querySelector(".comments-list");
-
-            // Create a comment element using the updated result structure
-            const newCommentElement = createCommentElement(result);
+        const result = await response.json();
+        console.log(result);
+        if (response.ok) {
+            const commentsList = form.closest(".comment-section").querySelector(".comments-list");
+            const newCommentElement = createCommentElement(result, postId);
             commentsList.appendChild(newCommentElement);
-
-            // Clear the input field
             commentInput.value = "";
-
-            // Scroll to the new comment
-            newCommentElement.scrollIntoView({
-              behavior: "smooth",
-              block: "center",
-            });
-          } else {
+            newCommentElement.scrollIntoView({ behavior: "smooth", block: "center" });
+        } else {
             alert(result.message || "Failed to post comment.");
-          }
-        } catch (error) {
-          console.error("Error posting comment:", error);
-          alert(
-            "An error occurred while posting the comment. Please try again."
-          );
         }
-      }
+    } catch (error) {
+        console.error("Error posting comment:", error);
+        alert("An error occurred while posting the comment. Please try again.");
+    }
+}
 
+// Function to handle reply submission
+async function handleReplySubmit(e, postId, parentId) {
+    e.preventDefault();
+    const token = localStorage.getItem("token");
+    if (!token) {
+        alert("No token found. Please log in again.");
+        return;
+    }
+
+    const form = e.target;
+    const replyInput = form.querySelector(".reply-input");
+    const replyText = replyInput.value.trim();
+
+    if (!replyText) {
+        alert("Reply cannot be empty.");
+        return;
+    }
+
+    try {
+        const response = await fetch(`/posts/comment/${postId}/reply/${parentId}`, {
+            method: "POST",
+            headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ text: replyText }),
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+            const commentElement = form.closest(".comment");
+            const repliesList = commentElement.querySelector(".replies-list") || document.createElement("div");
+            repliesList.classList.add("replies-list");
+
+            const newReplyElement = createCommentElement(result, postId);
+            repliesList.appendChild(newReplyElement);
+
+            // Append replies list if not already appended
+            if (!commentElement.contains(repliesList)) {
+                commentElement.appendChild(repliesList);
+            }
+
+            replyInput.value = "";
+            newReplyElement.scrollIntoView({ behavior: "smooth", block: "center" });
+        } else {
+            alert(result.message || "Failed to post reply.");
+        }
+    } catch (error) {
+        console.error("Error posting reply:", error);
+        alert("An error occurred while posting the reply. Please try again.");
+    }
+}
+
+// Function to toggle the comment section visibility
+function openCommentSection(postId) {
+    const commentSection = document.getElementById(`comment-section-${postId}`);
+    commentSection.style.display = commentSection.style.display === "none" ? "block" : "none";
+}
    
    
       function copyPostIdToClipboard(postId){

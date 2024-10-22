@@ -1,10 +1,13 @@
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
-const Post = require('../models/post');
+// const Post = require('../models/post');
+const { Post, Comment } = require('../models/post'); 
 const Report=require('../models/report');
 const authMiddleware = require('../middleware/auth');  // Ensure correct import
 const authenticateUser=require('./authenticate_user');
+const SavedPost = require('../models/savedPost');
+
 
 // Multer configuration for file uploads
 const storage = multer.diskStorage({
@@ -59,14 +62,19 @@ router.get('/get', async (req, res) => {
 
     try {
         const posts = await Post.find({})
-            .populate('user', 'username profilePic')
-            .populate('comments.user', 'username profilePic')
+            .populate('user', 'username profilePic') // Populate user info
+            .populate({
+                path: 'comments',
+                populate: {
+                    path: 'user',
+                    select: 'username profilePic' // Select necessary fields
+                }
+            })
             .sort({ createdAt: -1 });
 
         const formattedPosts = posts.map(post => ({
             postId: post._id,
-            //added
-            userId:post.user,
+            userId: post.user, // Added user ID
 
             user: {
                 profilePic: post.user?.profilePic || 'default-pic-url',
@@ -81,8 +89,8 @@ router.get('/get', async (req, res) => {
             likedByUser: userId ? post.likes.includes(userId) : false, // Check if the user liked the post
             comments: post.comments.map(comment => ({
                 user: comment.user ? {
-                    profilePic: comment.user.profilePic,
-                    username: comment.user.username,
+                    profilePic: comment.user.profilePic || 'default-pic-url',
+                    username: comment.user.username || 'Unknown User',
                 } : {
                     profilePic: 'default-pic-url',
                     username: 'Unknown User',
@@ -100,8 +108,6 @@ router.get('/get', async (req, res) => {
         res.status(500).json({ error: 'Failed to fetch posts' });
     }
 });
-
-
 
 
 // POST route to like/unlike a post
@@ -147,53 +153,75 @@ router.post('/like/:userId/:postId', async (req, res) => {
 // Example using Express.js
 router.post('/comment/:postId', authenticateUser, async (req, res) => {
     const postId = req.params.postId;
-    const commentText = req.body.text;
-    const { userId, username } = req.user; // Extract user details
+    const { text, parentCommentId } = req.body;
+    const { userId, username } = req.user;
 
-    console.log(`User ID: ${userId}, Username: ${username}, Comment Text: ${commentText}`);
+    console.log(`req.user ${username}`);
 
-    // Validate input
-    if (!commentText || !userId || !username) {
+    if (!text || !userId || !username) {
         return res.status(400).send({ message: 'Comment text, user ID, and username are required.' });
     }
 
     try {
+        const newComment = new Comment({
+            user: userId,
+            username: username,
+            text: text,
+            createdAt: new Date()
+        });
+
+        
         const post = await Post.findById(postId);
         if (!post) return res.status(404).send({ message: 'Post not found.' });
 
-        // Create the new comment object
-        const newComment = {
-            user: userId, // Ensure this is a valid ObjectId
-            username: username, // Ensure this is a valid string
-            text: commentText, // Text content of the comment
-            createdAt: new Date() // Timestamp of comment creation
-        };
-
-        console.log("New Comment:", newComment); // Log the new comment for debugging
-
-        // Push the new comment to the comments array
-        post.comments.push(newComment);
-
-        await post.save(); // Save the updated post
-
-        // Send back the newly added comment
-        const lastComment = post.comments[post.comments.length - 1];
-        const responseComment = {
-            text: lastComment.text,
-            user: {
-                userId: lastComment.user, // This is the ObjectId
-                username: lastComment.username
-            },
-            createdAt: lastComment.createdAt // Include the createdAt timestamp
-        };
-
-        res.status(200).send(responseComment);
+        post.comments.push(newComment._id);
+        await post.save();
+        
+        await newComment.save();
+        res.status(200).send(newComment);
     } catch (error) {
         console.error('Error adding comment:', error.message || error);
         res.status(500).send({ message: 'Error adding comment.', error: error.message });
     }
 });
 
+router.post('/comment/:postId/reply/:parentId', authenticateUser, async (req, res) => {
+    const { postId, parentId } = req.params;
+    const { text, parentCommentId } = req.body;
+    const { userId, username } = req.user;
+
+    console.log(`req.user ${username}`);
+
+    if (!text || !userId || !username) {
+        return res.status(400).send({ message: 'Comment text, user ID, and username are required.' });
+    }
+
+    try {
+        const newComment = new Comment({
+            user: userId,
+            username: username,
+            text: text,
+            createdAt: new Date()
+        });
+        console.log(newComment);
+
+        // If the comment is a reply to another comment
+        if (parentId) {
+            const parent = await Comment.findById(parentId);
+            if (!parent) return res.status(404).send({ message: 'Parent comment not found.' });
+
+            parent.replies.push(newComment._id);
+            await parent.save();
+            console.log(parent);
+        }
+        
+        await newComment.save();
+        res.status(200).send(newComment);
+    } catch (error) {
+        console.error('Error adding comment:', error.message || error);
+        res.status(500).send({ message: 'Error adding comment.', error: error.message });
+    }
+});
 
 router.get('/:postId', async (req, res) => {
     const { postId } = req.params;
@@ -252,6 +280,41 @@ router.post("/report", async (req, res) => {
     } catch (error) {
         console.error("Failed to save report:", error);
         res.status(500).json({ success: false, message: "Failed to submit report." });
+    }
+});
+
+//savepost
+
+router.post('/save', async (req, res) => {
+    const { userId, postId } = req.body;
+
+    try {
+        // Check if the post is already saved by the user
+        const existingSave = await SavedPost.findOne({ userId, postId });
+        if (existingSave) {
+            return res.status(400).json({ success: false, message: "Post already saved." });
+        }
+
+        const savedPost = new SavedPost({ userId, postId });
+        await savedPost.save();
+
+        res.json({ success: true, message: "Post saved successfully." });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: "An error occurred." });
+    }
+});
+
+// Route to fetch saved posts by user
+router.get('/getsaved/:userId', async (req, res) => {
+    const { userId } = req.params;
+
+    try {
+        const savedPosts = await SavedPost.find({ userId }).populate('postId').exec();
+        res.json({ success: true, savedPosts });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: "An error occurred." });
     }
 });
 
