@@ -459,13 +459,14 @@
 
       // Function to create comment section
      // Function to create the comment section for a specific post
+// Function to create a comment section for a specific post
 function createCommentSection(post) {
     const commentSection = document.createElement("div");
     commentSection.classList.add("comment-section");
     commentSection.id = `comment-section-${post.postId}`;
     commentSection.style.display = "none";
 
-    // Create the form for adding new comments
+    // Form for adding new comments
     const commentForm = document.createElement("form");
     commentForm.classList.add("comment-form");
     commentForm.onsubmit = (e) => handleCommentSubmit(e, post.postId);
@@ -487,17 +488,28 @@ function createCommentSection(post) {
     // Display existing comments
     const commentsList = document.createElement("div");
     commentsList.classList.add("comments-list");
+    fetchCommentsForPost(post.postId, commentsList);
 
-    post.comments.forEach((comment) => {
-        const commentElement = createCommentElement(comment, post.postId);
-        commentsList.appendChild(commentElement);
-    });
     commentSection.appendChild(commentsList);
 
     return commentSection;
 }
 
-// Function to create an individual comment element, including replies
+// Fetch comments and populate nested replies recursively
+async function fetchCommentsForPost(postId, container) {
+    try {
+        const response = await fetch(`/posts/post/${postId}/comments`);
+        const comments = await response.json();
+        comments.forEach((comment) => {
+            const commentElement = createCommentElement(comment, postId);
+            container.appendChild(commentElement);
+        });
+    } catch (error) {
+        console.error("Error fetching comments:", error);
+    }
+}
+
+// Function to create an individual comment element
 function createCommentElement(comment, postId) {
     const commentElement = document.createElement("div");
     commentElement.classList.add("comment");
@@ -531,7 +543,7 @@ function createCommentElement(comment, postId) {
 
     commentElement.appendChild(replyForm);
 
-    // Create a list of nested replies (if any)
+    // Add nested replies if available
     if (comment.replies && comment.replies.length > 0) {
         const repliesList = document.createElement("div");
         repliesList.classList.add("replies-list");
@@ -547,21 +559,16 @@ function createCommentElement(comment, postId) {
     return commentElement;
 }
 
-// Function to toggle reply form visibility
+// Toggle reply form visibility
 function toggleReplyForm(commentId) {
     const replyForm = document.getElementById(`reply-form-${commentId}`);
     replyForm.style.display = replyForm.style.display === "none" ? "block" : "none";
 }
 
-// Function to handle comment submission
+// Handle comment submission
 async function handleCommentSubmit(e, postId) {
     e.preventDefault();
     const token = localStorage.getItem("token");
-    if (!token) {
-        alert("No token found. Please log in again.");
-        return;
-    }
-
     const form = e.target;
     const commentInput = form.querySelector(".comment-input");
     const commentText = commentInput.value.trim();
@@ -582,7 +589,6 @@ async function handleCommentSubmit(e, postId) {
         });
 
         const result = await response.json();
-        console.log(result);
         if (response.ok) {
             const commentsList = form.closest(".comment-section").querySelector(".comments-list");
             const newCommentElement = createCommentElement(result, postId);
@@ -594,19 +600,13 @@ async function handleCommentSubmit(e, postId) {
         }
     } catch (error) {
         console.error("Error posting comment:", error);
-        alert("An error occurred while posting the comment. Please try again.");
     }
 }
 
-// Function to handle reply submission
+// Handle reply submission
 async function handleReplySubmit(e, postId, parentId) {
     e.preventDefault();
     const token = localStorage.getItem("token");
-    if (!token) {
-        alert("No token found. Please log in again.");
-        return;
-    }
-
     const form = e.target;
     const replyInput = form.querySelector(".reply-input");
     const replyText = replyInput.value.trim();
@@ -627,7 +627,6 @@ async function handleReplySubmit(e, postId, parentId) {
         });
 
         const result = await response.json();
-
         if (response.ok) {
             const commentElement = form.closest(".comment");
             const repliesList = commentElement.querySelector(".replies-list") || document.createElement("div");
@@ -636,7 +635,6 @@ async function handleReplySubmit(e, postId, parentId) {
             const newReplyElement = createCommentElement(result, postId);
             repliesList.appendChild(newReplyElement);
 
-            // Append replies list if not already appended
             if (!commentElement.contains(repliesList)) {
                 commentElement.appendChild(repliesList);
             }
@@ -648,16 +646,15 @@ async function handleReplySubmit(e, postId, parentId) {
         }
     } catch (error) {
         console.error("Error posting reply:", error);
-        alert("An error occurred while posting the reply. Please try again.");
     }
 }
 
-// Function to toggle the comment section visibility
+// Toggle comment section visibility
 function openCommentSection(postId) {
     const commentSection = document.getElementById(`comment-section-${postId}`);
     commentSection.style.display = commentSection.style.display === "none" ? "block" : "none";
 }
-   
+
    
       function copyPostIdToClipboard(postId){
       

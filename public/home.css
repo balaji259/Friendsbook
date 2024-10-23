@@ -614,3 +614,102 @@ button[type="submit"]:hover {
     color: red;
     font-weight: bold;
 }
+
+/* //updated */
+.comment-section {
+    border-top: 1px solid #e0e0e0;
+    padding: 10px;
+    background-color: #f9f9f9;
+    width: 100%;
+}
+
+/* Comment Styling */
+.comment {
+    margin-bottom: 10px;
+    padding: 8px;
+    border-radius: 4px;
+    background-color: #fff;
+    border: 1px solid #e0e0e0;
+}
+
+/* Reply Button Styling */
+.reply-button {
+    background-color: transparent;
+    color: #007bff;
+    border: none;
+    cursor: pointer;
+    margin-left: 10px;
+    font-size: 0.9em;
+}
+
+.reply-button:hover {
+    text-decoration: underline;
+}
+
+/* Reply Form Styling */
+.reply-form {
+    display: flex;
+    margin-top: 5px;
+}
+
+.reply-input, .comment-input {
+    flex: 1;
+    padding: 6px;
+    margin-right: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 0.9em;
+}
+
+/* Submit Button Styling */
+.reply-submit, .comment-submit {
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.reply-submit:hover, .comment-submit:hover {
+    background-color: #0056b3;
+}
+
+/* Replies List Styling */
+.replies-list {
+    padding-left: 20px;
+    margin-top: 5px;
+    border-left: 1px solid #e0e0e0;
+}
+
+/* Hide initially */
+.comment-section .reply-form, .replies-list {
+    display: none;
+}
+
+/* Comment Form Styling */
+.comment-form {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+/* Comment Input */
+.comment-input {
+    flex: 1;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    margin-right: 8px;
+}
+
+/* Adjust Comment Box */
+.comment strong {
+    font-size: 1em;
+    color: #333;
+}
+
+/* General Styling */
+button {
+    outline: none;
+}

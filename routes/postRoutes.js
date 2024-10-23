@@ -223,6 +223,27 @@ router.post('/comment/:postId/reply/:parentId', authenticateUser, async (req, re
     }
 });
 
+
+router.get('/post/:postId/comments', async (req, res) => {
+    try {
+        const { postId } = req.params;
+        const post = await Post.findById(postId).populate({
+            path: 'comments',
+            populate: {
+                path: 'replies',
+                model: 'Comment',
+                populate: { path: 'replies', model: 'Comment' } // Ensure deep nested replies are populated
+            }
+        });
+        if (!post) return res.status(404).send({ message: 'Post not found.' });
+        res.status(200).send(post.comments);
+    } catch (error) {
+        console.error('Error fetching comments:', error.message || error);
+        res.status(500).send({ message: 'Error fetching comments.', error: error.message });
+    }
+});
+
+
 router.get('/:postId', async (req, res) => {
     const { postId } = req.params;
 
