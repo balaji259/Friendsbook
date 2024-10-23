@@ -459,16 +459,56 @@
 
       // Function to create comment section
      // Function to create the comment section for a specific post
-function createCommentSection(post) {
+ // Function to create the comment section for a post
+  // Function to fetch the post and its comments
+async function fetchPostWithComments(postId) {
+    try {
+        const response = await fetch(`/posts/post/${postId}`);
+        const post = await response.json();
+
+        if (response.ok) {
+            // Here, you would handle the post rendering
+            renderPost(post); // Assume you have a renderPost function that handles this
+        } else {
+            alert(post.message || "Failed to fetch post.");
+        }
+    } catch (error) {
+        console.error("Error fetching post:", error);
+        alert("An error occurred while fetching the post. Please try again.");
+    }
+}
+
+// Function to create the post and comment section
+function renderPost(post) {
+    const postContainer = document.getElementById('post-container'); // Adjust as necessary
+
+    // Clear previous content
+    postContainer.innerHTML = '';
+
+    // Create post content (example)
+    const postContent = document.createElement('div');
+    postContent.innerHTML = `
+        <h2>${post.title}</h2>
+        <p>${post.content.mediaUrl}</p>
+    `;
+    postContainer.appendChild(postContent);
+
+    // Create comments section
+    const commentSection = createCommentSection(post);
+    postContainer.appendChild(commentSection);
+}
+
+// Function to create the comment section
+  function createCommentSection(post) {
     const commentSection = document.createElement("div");
     commentSection.classList.add("comment-section");
-    commentSection.id = `comment-section-${post.postId}`;
+    commentSection.id = `comment-section-${post._id}`;
     commentSection.style.display = "none";
 
     // Create the form for adding new comments
     const commentForm = document.createElement("form");
     commentForm.classList.add("comment-form");
-    commentForm.onsubmit = (e) => handleCommentSubmit(e, post.postId);
+    commentForm.onsubmit = (e) => handleCommentSubmit(e, post._id);
 
     const commentInput = document.createElement("input");
     commentInput.classList.add("comment-input");
@@ -485,36 +525,24 @@ function createCommentSection(post) {
     commentSection.appendChild(commentForm);
 
     // Display existing comments
-    const commentsList = document.createElement("div");
-    commentsList.classList.add("comments-list");
-
-    post.comments.forEach((comment) => {
-        const commentElement = createCommentElement(comment, post.postId);
-        commentsList.appendChild(commentElement);
-    });
+    const commentsList = renderComments(post.comments, post._id);
     commentSection.appendChild(commentsList);
 
     return commentSection;
 }
 
-// Function to create an individual comment element, including replies
+// Updated function to create an individual comment element, including replies
 function createCommentElement(comment, postId) {
     const commentElement = document.createElement("div");
     commentElement.classList.add("comment");
-    commentElement.innerHTML = `<strong>${comment.username}:</strong> ${comment.text}`;
 
-    // Reply button
-    const replyButton = document.createElement("button");
-    replyButton.classList.add("reply-button");
-    replyButton.textContent = "Reply";
-    replyButton.onclick = () => toggleReplyForm(comment._id);
-    commentElement.appendChild(replyButton);
+    commentElement.innerHTML = `
+        <strong>${comment.username}:</strong> ${comment.text}
+    `;
 
-    // Reply form
+    // Create the reply form
     const replyForm = document.createElement("form");
     replyForm.classList.add("reply-form");
-    replyForm.id = `reply-form-${comment._id}`;
-    replyForm.style.display = "none";
     replyForm.onsubmit = (e) => handleReplySubmit(e, postId, comment._id);
 
     const replyInput = document.createElement("input");
@@ -531,12 +559,12 @@ function createCommentElement(comment, postId) {
 
     commentElement.appendChild(replyForm);
 
-    // Create a list of nested replies (if any)
+    // Append replies if present
     if (comment.replies && comment.replies.length > 0) {
         const repliesList = document.createElement("div");
         repliesList.classList.add("replies-list");
 
-        comment.replies.forEach((reply) => {
+        comment.replies.forEach(reply => {
             const replyElement = createCommentElement(reply, postId);
             repliesList.appendChild(replyElement);
         });
@@ -547,10 +575,17 @@ function createCommentElement(comment, postId) {
     return commentElement;
 }
 
-// Function to toggle reply form visibility
-function toggleReplyForm(commentId) {
-    const replyForm = document.getElementById(`reply-form-${commentId}`);
-    replyForm.style.display = replyForm.style.display === "none" ? "block" : "none";
+// Function to render the list of comments
+function renderComments(comments, postId) {
+    const commentsList = document.createElement("div");
+    commentsList.classList.add("comments-list");
+
+    comments.forEach(comment => {
+        const commentElement = createCommentElement(comment, postId);
+        commentsList.appendChild(commentElement);
+    });
+
+    return commentsList;
 }
 
 // Function to handle comment submission
@@ -582,24 +617,22 @@ async function handleCommentSubmit(e, postId) {
         });
 
         const result = await response.json();
-        console.log(result);
         if (response.ok) {
             const commentsList = form.closest(".comment-section").querySelector(".comments-list");
             const newCommentElement = createCommentElement(result, postId);
             commentsList.appendChild(newCommentElement);
-            commentInput.value = "";
-            newCommentElement.scrollIntoView({ behavior: "smooth", block: "center" });
+            commentInput.value = ''; // Clear input field
         } else {
-            alert(result.message || "Failed to post comment.");
+            alert(result.message || "Failed to add comment.");
         }
     } catch (error) {
-        console.error("Error posting comment:", error);
-        alert("An error occurred while posting the comment. Please try again.");
+        console.error("Error submitting comment:", error);
+        alert("An error occurred while submitting the comment. Please try again.");
     }
 }
 
 // Function to handle reply submission
-async function handleReplySubmit(e, postId, parentId) {
+async function handleReplySubmit(e, postId, parentCommentId) {
     e.preventDefault();
     const token = localStorage.getItem("token");
     if (!token) {
@@ -617,7 +650,7 @@ async function handleReplySubmit(e, postId, parentId) {
     }
 
     try {
-        const response = await fetch(`/posts/comment/${postId}/reply/${parentId}`, {
+        const response = await fetch(`/posts/comment/${postId}/reply/${parentCommentId}`, {
             method: "POST",
             headers: {
                 Authorization: `Bearer ${token}`,
@@ -627,42 +660,47 @@ async function handleReplySubmit(e, postId, parentId) {
         });
 
         const result = await response.json();
-
         if (response.ok) {
+            // Find the closest comment element
             const commentElement = form.closest(".comment");
-            const repliesList = commentElement.querySelector(".replies-list") || document.createElement("div");
-            repliesList.classList.add("replies-list");
+            // Try to find the replies list
+            let repliesList = commentElement.querySelector(".replies-list");
 
-            const newReplyElement = createCommentElement(result, postId);
-            repliesList.appendChild(newReplyElement);
-
-            // Append replies list if not already appended
-            if (!commentElement.contains(repliesList)) {
+            // If repliesList doesn't exist, create it
+            if (!repliesList) {
+                repliesList = document.createElement("div");
+                repliesList.classList.add("replies-list");
                 commentElement.appendChild(repliesList);
             }
 
-            replyInput.value = "";
-            newReplyElement.scrollIntoView({ behavior: "smooth", block: "center" });
+            const newReplyElement = createCommentElement(result, postId);
+            repliesList.appendChild(newReplyElement);
+            replyInput.value = ''; // Clear input field
         } else {
-            alert(result.message || "Failed to post reply.");
+            alert(result.message || "Failed to add reply.");
         }
     } catch (error) {
-        console.error("Error posting reply:", error);
-        alert("An error occurred while posting the reply. Please try again.");
+        console.error("Error submitting reply:", error);
+        alert("An error occurred while submitting the reply. Please try again.");
     }
 }
+
+// On page load, fetch the post and comments
+document.addEventListener('DOMContentLoaded', () => {
+    const postId = /* Get the post ID from URL or context */
+    fetchPostWithComments(postId);
+});
+
 
 // Function to toggle the comment section visibility
 function openCommentSection(postId) {
     const commentSection = document.getElementById(`comment-section-${postId}`);
     commentSection.style.display = commentSection.style.display === "none" ? "block" : "none";
 }
-   
+
    
       function copyPostIdToClipboard(postId){
-      
-      
-      const postUrl = `http://localhost:7000/single-post.html?postId=${postId}`;
+       const postUrl = `http://localhost:7000/single-post.html?postId=${postId}`;
       navigator.clipboard.writeText(postUrl).then(() => {
           alert("Post link copied to clipboard! Share it anywhere.");
       }).catch(err => {

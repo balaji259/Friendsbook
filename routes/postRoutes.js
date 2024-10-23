@@ -153,10 +153,8 @@ router.post('/like/:userId/:postId', async (req, res) => {
 // Example using Express.js
 router.post('/comment/:postId', authenticateUser, async (req, res) => {
     const postId = req.params.postId;
-    const { text, parentCommentId } = req.body;
+    const { text } = req.body; // Removed parentCommentId from here
     const { userId, username } = req.user;
-
-    console.log(`req.user ${username}`);
 
     if (!text || !userId || !username) {
         return res.status(400).send({ message: 'Comment text, user ID, and username are required.' });
@@ -167,98 +165,78 @@ router.post('/comment/:postId', authenticateUser, async (req, res) => {
             user: userId,
             username: username,
             text: text,
-            createdAt: new Date()
+            createdAt: new Date(),
         });
 
-        
         const post = await Post.findById(postId);
         if (!post) return res.status(404).send({ message: 'Post not found.' });
 
         post.comments.push(newComment._id);
-        await post.save();
-        
         await newComment.save();
-        res.status(200).send(newComment);
+        await post.save();
+
+        // Populate the new comment with its replies (if any)
+        const populatedComment = await Comment.findById(newComment._id).populate('replies');
+
+        res.status(200).send(populatedComment); // Return the populated comment
     } catch (error) {
         console.error('Error adding comment:', error.message || error);
         res.status(500).send({ message: 'Error adding comment.', error: error.message });
     }
 });
 
+// Route to add a reply to a comment
 router.post('/comment/:postId/reply/:parentId', authenticateUser, async (req, res) => {
     const { postId, parentId } = req.params;
-    const { text, parentCommentId } = req.body;
+    const { text } = req.body; // Removed parentCommentId from here
     const { userId, username } = req.user;
 
-    console.log(`req.user ${username}`);
-
     if (!text || !userId || !username) {
-        return res.status(400).send({ message: 'Comment text, user ID, and username are required.' });
+        return res.status(400).send({ message: 'Reply text, user ID, and username are required.' });
     }
 
     try {
-        const newComment = new Comment({
+        const newReply = new Comment({
             user: userId,
             username: username,
             text: text,
-            createdAt: new Date()
+            createdAt: new Date(),
         });
-        console.log(newComment);
 
-        // If the comment is a reply to another comment
-        if (parentId) {
-            const parent = await Comment.findById(parentId);
-            if (!parent) return res.status(404).send({ message: 'Parent comment not found.' });
+        const parentComment = await Comment.findById(parentId);
+        if (!parentComment) return res.status(404).send({ message: 'Parent comment not found.' });
 
-            parent.replies.push(newComment._id);
-            await parent.save();
-            console.log(parent);
-        }
-        
-        await newComment.save();
-        res.status(200).send(newComment);
+        parentComment.replies.push(newReply._id);
+        await parentComment.save();
+        await newReply.save();
+
+        // Populate the new reply (if needed)
+        const populatedReply = await Comment.findById(newReply._id).populate('replies');
+
+        res.status(200).send(populatedReply); // Return the populated reply
     } catch (error) {
-        console.error('Error adding comment:', error.message || error);
-        res.status(500).send({ message: 'Error adding comment.', error: error.message });
+        console.error('Error adding reply:', error.message || error);
+        res.status(500).send({ message: 'Error adding reply.', error: error.message });
     }
 });
-
-router.get('/:postId', async (req, res) => {
-    const { postId } = req.params;
-
+router.get('/post/:postId', async (req, res) => {
     try {
-        const post = await Post.findById(postId)
-            .populate("user", "username profilePic")
-            .populate("comments.user", "username profilePic");
-
-        if (!post) {
-            return res.status(404).json({ error: "Post not found" });
-        }
-
-        res.json({
-            postId: post._id,
-            user: {
-                profilePic: post.user?.profilePic || "default-pic-url",
-                username: post.user?.username || "Unknown User",
-            },
-            postType: post.postType,
-            caption: post.caption,
-            content: post.content,
-            likesCount: post.likes.length,
-            comments: post.comments.map(comment => ({
-                user: {
-                    profilePic: comment.user.profilePic || "default-pic-url",
-                    username: comment.user.username || "Unknown User",
+        const post = await Post.findById(req.params.postId)
+            .populate({
+                path: 'comments',
+                populate: {
+                    path: 'replies',
+                    model: 'Comment', // Ensure to reference the Comment model correctly
                 },
-                text: comment.text,
-                createdAt: comment.createdAt,
-            })),
-            shares: post.shares,
-            createdAt: post.createdAt,
-        });
+            })
+            .exec();
+
+        if (!post) return res.status(404).send({ message: 'Post not found.' });
+
+        res.status(200).send(post);
     } catch (error) {
-        console.error("Error fetching post:", error);
-        res.status(500).json({ error: "Failed to fetch post" });
+        console.error('Error fetching post:', error.message || error);
+        res.status(500).send({ message: 'Error fetching post.', error: error.message });
     }
 });
 
