@@ -460,6 +460,7 @@
       // Function to create comment section
      // Function to create the comment section for a specific post
 // Function to create a comment section for a specific post
+ // Function to create the comment section for a post
 function createCommentSection(post) {
     const commentSection = document.createElement("div");
     commentSection.classList.add("comment-section");
@@ -655,23 +656,19 @@ function openCommentSection(postId) {
     commentSection.style.display = commentSection.style.display === "none" ? "block" : "none";
 }
 
-   
-      function copyPostIdToClipboard(postId){
-      
-      
-      const postUrl = `http://localhost:7000/single-post.html?postId=${postId}`;
-      navigator.clipboard.writeText(postUrl).then(() => {
-          alert("Post link copied to clipboard! Share it anywhere.");
-      }).catch(err => {
-          console.error('Failed to copy: ', err);
-      });
-  }
-    
+function copyPostIdToClipboard(postId) {
+    const postUrl = `http://localhost:7000/single-post.html?postId=${postId}`;
+    navigator.clipboard.writeText(postUrl).then(() => {
+        alert("Post link copied to clipboard! Share it anywhere.");
+    }).catch(err => {
+        console.error('Failed to copy: ', err);
+    });
+}
 
-  function reportPost(postId, userId) {
-    // Redirect to the report page with query parameters
+function reportPost(postId, userId) {
     window.location.href = `report.html?postId=${postId}&userId=${userId}`;
 }
+
 
 
                                      
