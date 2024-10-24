@@ -321,26 +321,20 @@
         const likeButton = document.createElement("button");
         likeButton.classList.add("post-btn", "like-btn");
         likeButton.id = `like-button-${post.postId}`;
-        likeButton.innerHTML = `<i class="fa fa-thumbs-up"></i> Like (${
-            post.likesCount || 0
-        })`;
+        likeButton.innerHTML = `<i class="fa fa-thumbs-up"></i> Like (${post.likesCount || 0})`;
         likeButton.onclick = () => toggleLike(userId, post.postId, likeButton);
 
         postFooter.appendChild(likeButton);
 
         const commentButton = document.createElement("button");
         commentButton.classList.add("post-btn", "comment-btn");
-        commentButton.innerHTML = `<i class="fa fa-comment"></i> Comment (${
-            post.comments.length || 0
-        })`;
+        commentButton.innerHTML = `<i class="fa fa-comment"></i> Comment (${post.comments.length || 0})`;
         commentButton.onclick = () => openCommentSection(post.postId);
         postFooter.appendChild(commentButton);
 
         const shareButton = document.createElement("button");
         shareButton.classList.add("post-btn", "share-btn");
-        shareButton.innerHTML = `<i class="fa fa-share"></i> Share (${
-            post.shares || 0
-        })`;
+        shareButton.innerHTML = `<i class="fa fa-share"></i> Share (${post.shares || 0})`;
         shareButton.onclick = () => copyPostIdToClipboard(post.postId);
         postFooter.appendChild(shareButton);
 
@@ -371,18 +365,37 @@
 
         const commentsList = document.createElement("div");
         commentsList.classList.add("comments-list");
-        post.comments.forEach((comment) => {
-            const commentElement = document.createElement("div");
-            commentElement.classList.add("comment");
-            commentElement.innerHTML = `<strong>${comment.user.username}:</strong> ${comment.text}`;
-            commentsList.appendChild(commentElement);
-        });
-        commentSection.appendChild(commentsList);
 
+        // Render comments, including nested replies
+        post.comments.forEach((comment) => {
+            renderComment(comment, commentsList);
+        });
+
+        commentSection.appendChild(commentsList);
         postElement.appendChild(commentSection);
 
         postsContainer.appendChild(postElement);
     });
+}
+
+// Recursive function to render comments and nested replies
+function renderComment(comment, container) {
+    const commentElement = document.createElement("div");
+    commentElement.classList.add("comment");
+    commentElement.innerHTML = `<strong>${comment.user.username}:</strong> ${comment.text}`;
+
+    container.appendChild(commentElement);
+
+    if (comment.replies && comment.replies.length > 0) {
+        const replyContainer = document.createElement("div");
+        replyContainer.classList.add("replies-container");
+
+        comment.replies.forEach((reply) => {
+            renderComment(reply, replyContainer); // Recursively render nested replies
+        });
+
+        container.appendChild(replyContainer);
+    }
 }
 
   function togglePostMenu(postId) {
@@ -461,14 +474,13 @@
      // Function to create the comment section for a specific post
  // Function to create the comment section for a post
   // Function to fetch the post and its comments
-async function fetchPostWithComments(postId) {
+  async function fetchPostWithComments(postId) {
     try {
         const response = await fetch(`/posts/post/${postId}`);
         const post = await response.json();
 
         if (response.ok) {
-            // Here, you would handle the post rendering
-            renderPost(post); // Assume you have a renderPost function that handles this
+            renderPost(post); // Handles the post rendering
         } else {
             alert(post.message || "Failed to fetch post.");
         }
@@ -481,34 +493,30 @@ async function fetchPostWithComments(postId) {
 // Function to create the post and comment section
 function renderPost(post) {
     const postContainer = document.getElementById('post-container'); // Adjust as necessary
+    postContainer.innerHTML = ''; // Clear previous content
 
-    // Clear previous content
-    postContainer.innerHTML = '';
-
-    // Create post content (example)
     const postContent = document.createElement('div');
     postContent.innerHTML = `
-        <h2>${post.title}</h2>
-        <p>${post.content.mediaUrl}</p>
+        <h2>${post.caption}</h2>
+        <p>${post.content.mediaUrl ? `<img src="${post.content.mediaUrl}" />` : ''}</p>
     `;
     postContainer.appendChild(postContent);
 
-    // Create comments section
     const commentSection = createCommentSection(post);
     postContainer.appendChild(commentSection);
 }
 
 // Function to create the comment section
-  function createCommentSection(post) {
+function createCommentSection(post) {
     const commentSection = document.createElement("div");
     commentSection.classList.add("comment-section");
-    commentSection.id = `comment-section-${post._id}`;
-    commentSection.style.display = "none";
+    commentSection.id = `comment-section-${post.postId}`;
+    commentSection.style.display = "block"; // Displaying comments by default
 
-    // Create the form for adding new comments
+    // Comment form for posting a new comment
     const commentForm = document.createElement("form");
     commentForm.classList.add("comment-form");
-    commentForm.onsubmit = (e) => handleCommentSubmit(e, post._id);
+    commentForm.onsubmit = (e) => handleCommentSubmit(e, post.postId);
 
     const commentInput = document.createElement("input");
     commentInput.classList.add("comment-input");
@@ -524,26 +532,27 @@ function renderPost(post) {
 
     commentSection.appendChild(commentForm);
 
-    // Display existing comments
-    const commentsList = renderComments(post.comments, post._id);
+    // Rendering all comments and their nested replies
+    const commentsList = renderComments(post.comments, post.postId);
     commentSection.appendChild(commentsList);
 
     return commentSection;
 }
 
-// Updated function to create an individual comment element, including replies
 function createCommentElement(comment, postId) {
     const commentElement = document.createElement("div");
     commentElement.classList.add("comment");
 
-    commentElement.innerHTML = `
-        <strong>${comment.username}:</strong> ${comment.text}
-    `;
+    // Displaying comment content
+    commentElement.innerHTML = `<strong>${comment.user.username}:</strong> ${comment.text}`;
 
-    // Create the reply form
+    // Creating form to reply to this comment
     const replyForm = document.createElement("form");
     replyForm.classList.add("reply-form");
-    replyForm.onsubmit = (e) => handleReplySubmit(e, postId, comment._id);
+    replyForm.onsubmit = (e) => {
+        e.preventDefault();
+        handleReplySubmit(e, postId, comment._id); // Handle reply submission
+    };
 
     const replyInput = document.createElement("input");
     replyInput.classList.add("reply-input");
@@ -559,13 +568,13 @@ function createCommentElement(comment, postId) {
 
     commentElement.appendChild(replyForm);
 
-    // Append replies if present
+    // Checking for and displaying replies (nested comments)
     if (comment.replies && comment.replies.length > 0) {
         const repliesList = document.createElement("div");
         repliesList.classList.add("replies-list");
 
         comment.replies.forEach(reply => {
-            const replyElement = createCommentElement(reply, postId);
+            const replyElement = createCommentElement(reply, postId); // Recursively render replies
             repliesList.appendChild(replyElement);
         });
 
@@ -575,7 +584,7 @@ function createCommentElement(comment, postId) {
     return commentElement;
 }
 
-// Function to render the list of comments
+
 function renderComments(comments, postId) {
     const commentsList = document.createElement("div");
     commentsList.classList.add("comments-list");
@@ -588,7 +597,7 @@ function renderComments(comments, postId) {
     return commentsList;
 }
 
-// Function to handle comment submission
+
 async function handleCommentSubmit(e, postId) {
     e.preventDefault();
     const token = localStorage.getItem("token");
@@ -621,7 +630,7 @@ async function handleCommentSubmit(e, postId) {
             const commentsList = form.closest(".comment-section").querySelector(".comments-list");
             const newCommentElement = createCommentElement(result, postId);
             commentsList.appendChild(newCommentElement);
-            commentInput.value = ''; // Clear input field
+            commentInput.value = ''; 
         } else {
             alert(result.message || "Failed to add comment.");
         }
@@ -631,7 +640,7 @@ async function handleCommentSubmit(e, postId) {
     }
 }
 
-// Function to handle reply submission
+
 async function handleReplySubmit(e, postId, parentCommentId) {
     e.preventDefault();
     const token = localStorage.getItem("token");
@@ -661,12 +670,9 @@ async function handleReplySubmit(e, postId, parentCommentId) {
 
         const result = await response.json();
         if (response.ok) {
-            // Find the closest comment element
             const commentElement = form.closest(".comment");
-            // Try to find the replies list
             let repliesList = commentElement.querySelector(".replies-list");
 
-            // If repliesList doesn't exist, create it
             if (!repliesList) {
                 repliesList = document.createElement("div");
                 repliesList.classList.add("replies-list");
@@ -675,7 +681,7 @@ async function handleReplySubmit(e, postId, parentCommentId) {
 
             const newReplyElement = createCommentElement(result, postId);
             repliesList.appendChild(newReplyElement);
-            replyInput.value = ''; // Clear input field
+            replyInput.value = '';
         } else {
             alert(result.message || "Failed to add reply.");
         }
@@ -685,18 +691,13 @@ async function handleReplySubmit(e, postId, parentCommentId) {
     }
 }
 
-// On page load, fetch the post and comments
-document.addEventListener('DOMContentLoaded', () => {
-    const postId = /* Get the post ID from URL or context */
-    fetchPostWithComments(postId);
-});
 
-
-// Function to toggle the comment section visibility
 function openCommentSection(postId) {
     const commentSection = document.getElementById(`comment-section-${postId}`);
     commentSection.style.display = commentSection.style.display === "none" ? "block" : "none";
 }
+
+
 
    
       function copyPostIdToClipboard(postId){

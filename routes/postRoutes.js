@@ -57,25 +57,34 @@ router.post('/create', upload.single('mediaContent'), async (req, res) => {
 });
 
 
-router.get('/get', async (req, res) => {
+    router.get('/get', async (req, res) => {
     const userId = req.user ? req.user._id : null; // Optional authentication check
 
     try {
         const posts = await Post.find({})
-            .populate('user', 'username profilePic') // Populate user info
-            .populate({
-                path: 'comments',
-                populate: {
-                    path: 'user',
-                    select: 'username profilePic' // Select necessary fields
+    .populate('user', 'username profilePic') // Populate user info for the post
+    .populate({
+        path: 'comments',
+        populate: [
+            { path: 'user', select: 'username profilePic' }, // Populate user for comments
+            { 
+                path: 'replies', 
+                populate: { 
+                    path: 'user', select: 'username profilePic'  // Populate user for replies
+                },
+                populate: { 
+                    path: 'replies', // Populate nested replies recursively
+                    populate: { path: 'user', select: 'username profilePic' }
                 }
-            })
-            .sort({ createdAt: -1 });
+            }
+        ]
+    })
+    .sort({ createdAt: -1 });
+
+    
 
         const formattedPosts = posts.map(post => ({
             postId: post._id,
-            userId: post.user, // Added user ID
-
             user: {
                 profilePic: post.user?.profilePic || 'default-pic-url',
                 username: post.user?.username || 'Unknown User',
@@ -86,7 +95,7 @@ router.get('/get', async (req, res) => {
                 mediaUrl: post.content.mediaUrl,
             },
             likesCount: post.likes.length,
-            likedByUser: userId ? post.likes.includes(userId) : false, // Check if the user liked the post
+            likedByUser: userId ? post.likes.includes(userId) : false,
             comments: post.comments.map(comment => ({
                 user: comment.user ? {
                     profilePic: comment.user.profilePic || 'default-pic-url',
@@ -97,11 +106,34 @@ router.get('/get', async (req, res) => {
                 },
                 text: comment.text,
                 createdAt: comment.createdAt,
+                replies: comment.replies.map(reply => ({
+                    user: reply.user ? {
+                        profilePic: reply.user.profilePic || 'default-pic-url',
+                        username: reply.user.username || 'Unknown User',
+                    } : {
+                        profilePic: 'default-pic-url',
+                        username: 'Unknown User',
+                    },
+                    text: reply.text,
+                    createdAt: reply.createdAt,
+                    // If there are further nested replies, recursively format them too.
+                    replies: reply.replies?.map(nestedReply => ({
+                        user: nestedReply.user ? {
+                            profilePic: nestedReply.user.profilePic || 'default-pic-url',
+                            username: nestedReply.user.username || 'Unknown User',
+                        } : {
+                            profilePic: 'default-pic-url',
+                            username: 'Unknown User',
+                        },
+                        text: nestedReply.text,
+                        createdAt: nestedReply.createdAt,
+                    })) || []
+                })) || [] // Handle empty replies
             })),
             shares: post.shares,
             createdAt: post.createdAt,
         }));
-
+        
         res.json(formattedPosts);
     } catch (error) {
         console.error('Failed to fetch posts:', error);
@@ -151,9 +183,10 @@ router.post('/like/:userId/:postId', async (req, res) => {
 // Add a comment to a post
 // Comment route for a specific post
 // Example using Express.js
+    // Add a new comment to a post
 router.post('/comment/:postId', authenticateUser, async (req, res) => {
     const postId = req.params.postId;
-    const { text } = req.body; // Removed parentCommentId from here
+    const { text } = req.body;
     const { userId, username } = req.user;
 
     if (!text || !userId || !username) {
@@ -168,27 +201,29 @@ router.post('/comment/:postId', authenticateUser, async (req, res) => {
             createdAt: new Date(),
         });
 
+        // Save the comment before adding it to the post
+        await newComment.save();
+
         const post = await Post.findById(postId);
         if (!post) return res.status(404).send({ message: 'Post not found.' });
 
         post.comments.push(newComment._id);
-        await newComment.save();
         await post.save();
 
         // Populate the new comment with its replies (if any)
         const populatedComment = await Comment.findById(newComment._id).populate('replies');
 
-        res.status(200).send(populatedComment); // Return the populated comment
+        res.status(200).send(populatedComment);
     } catch (error) {
         console.error('Error adding comment:', error.message || error);
         res.status(500).send({ message: 'Error adding comment.', error: error.message });
     }
 });
 
-// Route to add a reply to a comment
+// Add a reply to a comment
 router.post('/comment/:postId/reply/:parentId', authenticateUser, async (req, res) => {
     const { postId, parentId } = req.params;
-    const { text } = req.body; // Removed parentCommentId from here
+    const { text } = req.body;
     const { userId, username } = req.user;
 
     if (!text || !userId || !username) {
@@ -203,22 +238,31 @@ router.post('/comment/:postId/reply/:parentId', authenticateUser, async (req, re
             createdAt: new Date(),
         });
 
+        // Save the reply first before pushing its ID to the parent
+        await newReply.save();
+        console.log('New reply saved:', newReply);
+
         const parentComment = await Comment.findById(parentId);
-        if (!parentComment) return res.status(404).send({ message: 'Parent comment not found.' });
+        if (!parentComment) {
+            console.error('Parent comment not found');
+            return res.status(404).send({ message: 'Parent comment not found.' });
+        }
 
         parentComment.replies.push(newReply._id);
         await parentComment.save();
-        await newReply.save();
 
-        // Populate the new reply (if needed)
+        console.log('Updated Parent Comment:', parentComment);
+
         const populatedReply = await Comment.findById(newReply._id).populate('replies');
 
-        res.status(200).send(populatedReply); // Return the populated reply
+        res.status(200).send(populatedReply);
     } catch (error) {
         console.error('Error adding reply:', error.message || error);
         res.status(500).send({ message: 'Error adding reply.', error: error.message });
     }
 });
+
+// Fetch a post with comments and replies
 router.get('/post/:postId', async (req, res) => {
     try {
         const post = await Post.findById(req.params.postId)
@@ -226,13 +270,17 @@ router.get('/post/:postId', async (req, res) => {
                 path: 'comments',
                 populate: {
                     path: 'replies',
-                    model: 'Comment', // Ensure to reference the Comment model correctly
+                    model: 'Comment',
+                    populate: {
+                        path: 'replies',
+                        model: 'Comment',  // Deep populate more levels if needed
+                    }
                 },
-            })
-            .exec();
+            });
 
         if (!post) return res.status(404).send({ message: 'Post not found.' });
 
+        console.log("Populated Post:", JSON.stringify(post, null, 2));
         res.status(200).send(post);
     } catch (error) {
         console.error('Error fetching post:', error.message || error);
