@@ -321,26 +321,20 @@
         const likeButton = document.createElement("button");
         likeButton.classList.add("post-btn", "like-btn");
         likeButton.id = `like-button-${post.postId}`;
-        likeButton.innerHTML = `<i class="fa fa-thumbs-up"></i> Like (${
-            post.likesCount || 0
-        })`;
+        likeButton.innerHTML = `<i class="fa fa-thumbs-up"></i> Like (${post.likesCount || 0})`;
         likeButton.onclick = () => toggleLike(userId, post.postId, likeButton);
 
         postFooter.appendChild(likeButton);
 
         const commentButton = document.createElement("button");
         commentButton.classList.add("post-btn", "comment-btn");
-        commentButton.innerHTML = `<i class="fa fa-comment"></i> Comment (${
-            post.comments.length || 0
-        })`;
+        commentButton.innerHTML = `<i class="fa fa-comment"></i> Comment (${post.comments.length || 0})`;
         commentButton.onclick = () => openCommentSection(post.postId);
         postFooter.appendChild(commentButton);
 
         const shareButton = document.createElement("button");
         shareButton.classList.add("post-btn", "share-btn");
-        shareButton.innerHTML = `<i class="fa fa-share"></i> Share (${
-            post.shares || 0
-        })`;
+        shareButton.innerHTML = `<i class="fa fa-share"></i> Share (${post.shares || 0})`;
         shareButton.onclick = () => copyPostIdToClipboard(post.postId);
         postFooter.appendChild(shareButton);
 
@@ -371,18 +365,37 @@
 
         const commentsList = document.createElement("div");
         commentsList.classList.add("comments-list");
-        post.comments.forEach((comment) => {
-            const commentElement = document.createElement("div");
-            commentElement.classList.add("comment");
-            commentElement.innerHTML = `<strong>${comment.user.username}:</strong> ${comment.text}`;
-            commentsList.appendChild(commentElement);
-        });
-        commentSection.appendChild(commentsList);
 
+        // Render comments, including nested replies
+        post.comments.forEach((comment) => {
+            renderComment(comment, commentsList);
+        });
+
+        commentSection.appendChild(commentsList);
         postElement.appendChild(commentSection);
 
         postsContainer.appendChild(postElement);
     });
+}
+
+// Recursive function to render comments and nested replies
+function renderComment(comment, container) {
+    const commentElement = document.createElement("div");
+    commentElement.classList.add("comment");
+    commentElement.innerHTML = `<strong>${comment.user.username}:</strong> ${comment.text}`;
+
+    container.appendChild(commentElement);
+
+    if (comment.replies && comment.replies.length > 0) {
+        const replyContainer = document.createElement("div");
+        replyContainer.classList.add("replies-container");
+
+        comment.replies.forEach((reply) => {
+            renderComment(reply, replyContainer); // Recursively render nested replies
+        });
+
+        container.appendChild(replyContainer);
+    }
 }
 
   function togglePostMenu(postId) {
@@ -459,15 +472,48 @@
 
       // Function to create comment section
      // Function to create the comment section for a specific post
-// Function to create a comment section for a specific post
  // Function to create the comment section for a post
+  // Function to fetch the post and its comments
+  async function fetchPostWithComments(postId) {
+    try {
+        const response = await fetch(`/posts/post/${postId}`);
+        const post = await response.json();
+
+        if (response.ok) {
+            renderPost(post); // Handles the post rendering
+        } else {
+            alert(post.message || "Failed to fetch post.");
+        }
+    } catch (error) {
+        console.error("Error fetching post:", error);
+        alert("An error occurred while fetching the post. Please try again.");
+    }
+}
+
+// Function to create the post and comment section
+function renderPost(post) {
+    const postContainer = document.getElementById('post-container'); // Adjust as necessary
+    postContainer.innerHTML = ''; // Clear previous content
+
+    const postContent = document.createElement('div');
+    postContent.innerHTML = `
+        <h2>${post.caption}</h2>
+        <p>${post.content.mediaUrl ? `<img src="${post.content.mediaUrl}" />` : ''}</p>
+    `;
+    postContainer.appendChild(postContent);
+
+    const commentSection = createCommentSection(post);
+    postContainer.appendChild(commentSection);
+}
+
+// Function to create the comment section
 function createCommentSection(post) {
     const commentSection = document.createElement("div");
     commentSection.classList.add("comment-section");
     commentSection.id = `comment-section-${post.postId}`;
-    commentSection.style.display = "none";
+    commentSection.style.display = "block"; // Displaying comments by default
 
-    // Form for adding new comments
+    // Comment form for posting a new comment
     const commentForm = document.createElement("form");
     commentForm.classList.add("comment-form");
     commentForm.onsubmit = (e) => handleCommentSubmit(e, post.postId);
@@ -486,49 +532,27 @@ function createCommentSection(post) {
 
     commentSection.appendChild(commentForm);
 
-    // Display existing comments
-    const commentsList = document.createElement("div");
-    commentsList.classList.add("comments-list");
-    fetchCommentsForPost(post.postId, commentsList);
-
+    // Rendering all comments and their nested replies
+    const commentsList = renderComments(post.comments, post.postId);
     commentSection.appendChild(commentsList);
 
     return commentSection;
 }
 
-// Fetch comments and populate nested replies recursively
-async function fetchCommentsForPost(postId, container) {
-    try {
-        const response = await fetch(`/posts/post/${postId}/comments`);
-        const comments = await response.json();
-        comments.forEach((comment) => {
-            const commentElement = createCommentElement(comment, postId);
-            container.appendChild(commentElement);
-        });
-    } catch (error) {
-        console.error("Error fetching comments:", error);
-    }
-}
-
-// Function to create an individual comment element
 function createCommentElement(comment, postId) {
     const commentElement = document.createElement("div");
     commentElement.classList.add("comment");
-    commentElement.innerHTML = `<strong>${comment.username}:</strong> ${comment.text}`;
 
-    // Reply button
-    const replyButton = document.createElement("button");
-    replyButton.classList.add("reply-button");
-    replyButton.textContent = "Reply";
-    replyButton.onclick = () => toggleReplyForm(comment._id);
-    commentElement.appendChild(replyButton);
+    // Displaying comment content
+    commentElement.innerHTML = `<strong>${comment.user.username}:</strong> ${comment.text}`;
 
-    // Reply form
+    // Creating form to reply to this comment
     const replyForm = document.createElement("form");
     replyForm.classList.add("reply-form");
-    replyForm.id = `reply-form-${comment._id}`;
-    replyForm.style.display = "none";
-    replyForm.onsubmit = (e) => handleReplySubmit(e, postId, comment._id);
+    replyForm.onsubmit = (e) => {
+        e.preventDefault();
+        handleReplySubmit(e, postId, comment._id); // Handle reply submission
+    };
 
     const replyInput = document.createElement("input");
     replyInput.classList.add("reply-input");
@@ -544,13 +568,13 @@ function createCommentElement(comment, postId) {
 
     commentElement.appendChild(replyForm);
 
-    // Add nested replies if available
+    // Checking for and displaying replies (nested comments)
     if (comment.replies && comment.replies.length > 0) {
         const repliesList = document.createElement("div");
         repliesList.classList.add("replies-list");
 
-        comment.replies.forEach((reply) => {
-            const replyElement = createCommentElement(reply, postId);
+        comment.replies.forEach(reply => {
+            const replyElement = createCommentElement(reply, postId); // Recursively render replies
             repliesList.appendChild(replyElement);
         });
 
@@ -560,16 +584,28 @@ function createCommentElement(comment, postId) {
     return commentElement;
 }
 
-// Toggle reply form visibility
-function toggleReplyForm(commentId) {
-    const replyForm = document.getElementById(`reply-form-${commentId}`);
-    replyForm.style.display = replyForm.style.display === "none" ? "block" : "none";
+
+function renderComments(comments, postId) {
+    const commentsList = document.createElement("div");
+    commentsList.classList.add("comments-list");
+
+    comments.forEach(comment => {
+        const commentElement = createCommentElement(comment, postId);
+        commentsList.appendChild(commentElement);
+    });
+
+    return commentsList;
 }
 
-// Handle comment submission
+
 async function handleCommentSubmit(e, postId) {
     e.preventDefault();
     const token = localStorage.getItem("token");
+    if (!token) {
+        alert("No token found. Please log in again.");
+        return;
+    }
+
     const form = e.target;
     const commentInput = form.querySelector(".comment-input");
     const commentText = commentInput.value.trim();
@@ -594,20 +630,25 @@ async function handleCommentSubmit(e, postId) {
             const commentsList = form.closest(".comment-section").querySelector(".comments-list");
             const newCommentElement = createCommentElement(result, postId);
             commentsList.appendChild(newCommentElement);
-            commentInput.value = "";
-            newCommentElement.scrollIntoView({ behavior: "smooth", block: "center" });
+            commentInput.value = ''; 
         } else {
-            alert(result.message || "Failed to post comment.");
+            alert(result.message || "Failed to add comment.");
         }
     } catch (error) {
-        console.error("Error posting comment:", error);
+        console.error("Error submitting comment:", error);
+        alert("An error occurred while submitting the comment. Please try again.");
     }
 }
 
-// Handle reply submission
-async function handleReplySubmit(e, postId, parentId) {
+
+async function handleReplySubmit(e, postId, parentCommentId) {
     e.preventDefault();
     const token = localStorage.getItem("token");
+    if (!token) {
+        alert("No token found. Please log in again.");
+        return;
+    }
+
     const form = e.target;
     const replyInput = form.querySelector(".reply-input");
     const replyText = replyInput.value.trim();
@@ -618,7 +659,7 @@ async function handleReplySubmit(e, postId, parentId) {
     }
 
     try {
-        const response = await fetch(`/posts/comment/${postId}/reply/${parentId}`, {
+        const response = await fetch(`/posts/comment/${postId}/reply/${parentCommentId}`, {
             method: "POST",
             headers: {
                 Authorization: `Bearer ${token}`,
@@ -630,45 +671,49 @@ async function handleReplySubmit(e, postId, parentId) {
         const result = await response.json();
         if (response.ok) {
             const commentElement = form.closest(".comment");
-            const repliesList = commentElement.querySelector(".replies-list") || document.createElement("div");
-            repliesList.classList.add("replies-list");
+            let repliesList = commentElement.querySelector(".replies-list");
 
-            const newReplyElement = createCommentElement(result, postId);
-            repliesList.appendChild(newReplyElement);
-
-            if (!commentElement.contains(repliesList)) {
+            if (!repliesList) {
+                repliesList = document.createElement("div");
+                repliesList.classList.add("replies-list");
                 commentElement.appendChild(repliesList);
             }
 
-            replyInput.value = "";
-            newReplyElement.scrollIntoView({ behavior: "smooth", block: "center" });
+            const newReplyElement = createCommentElement(result, postId);
+            repliesList.appendChild(newReplyElement);
+            replyInput.value = '';
         } else {
-            alert(result.message || "Failed to post reply.");
+            alert(result.message || "Failed to add reply.");
         }
     } catch (error) {
-        console.error("Error posting reply:", error);
+        console.error("Error submitting reply:", error);
+        alert("An error occurred while submitting the reply. Please try again.");
     }
 }
 
-// Toggle comment section visibility
+
 function openCommentSection(postId) {
     const commentSection = document.getElementById(`comment-section-${postId}`);
     commentSection.style.display = commentSection.style.display === "none" ? "block" : "none";
 }
 
-function copyPostIdToClipboard(postId) {
-    const postUrl = `http://localhost:7000/single-post.html?postId=${postId}`;
-    navigator.clipboard.writeText(postUrl).then(() => {
-        alert("Post link copied to clipboard! Share it anywhere.");
-    }).catch(err => {
-        console.error('Failed to copy: ', err);
-    });
-}
 
-function reportPost(postId, userId) {
+
+   
+      function copyPostIdToClipboard(postId){
+       const postUrl = `http://localhost:7000/single-post.html?postId=${postId}`;
+      navigator.clipboard.writeText(postUrl).then(() => {
+          alert("Post link copied to clipboard! Share it anywhere.");
+      }).catch(err => {
+          console.error('Failed to copy: ', err);
+      });
+  }
+    
+
+  function reportPost(postId, userId) {
+    // Redirect to the report page with query parameters
     window.location.href = `report.html?postId=${postId}&userId=${userId}`;
 }
-
 
 
                                      
