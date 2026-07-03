@@ -36,7 +36,7 @@ const sendOTP = async (req,res) =>{
 
     // Send the OTP via email
 
-      console.log("Sending OTP to", email, "via", process.env.TRANSPORTER_EMAIL);
+      console.log("Sending OTP to", email, "via", process.env.EMAIL_USER);
     
         await transporter.sendMail({
     from: `friendsbook <${process.env.EMAIL_USER}>`, 

@@ -78,41 +78,37 @@ npm install
 
 ### 3️⃣ Set up environment variables
 
+Create a `.env` file in the `backend/` directory:
 ```env
-CLOUDINARY_API_KEY=your_cloudinary_api_key
-CLOUDINARY_API_SECRET=your_cloudinary_api_secret
-CLOUDINARY_CLOUD_NAME=your_cloudinary_cloud_name
-
-EMAIL_PASS=your_email_password_or_app_specific_password
-EMAIL_USER=your_email_address
-
+PORT=7000
+MONGO_URI=your_mongodb_connection_string
 JWT_SECRET=your_jwt_secret
 
-MONGO_URI=your_mongodb_connection_string
+# Cloudinary Config
+CLOUDINARY_CLOUD_NAME=your_cloudinary_cloud_name
+CLOUDINARY_API_KEY=your_cloudinary_api_key
+CLOUDINARY_API_SECRET=your_cloudinary_api_secret
 
-PORT=your_port_number
-
-TOKEN_URI=https://oauth2.googleapis.com/token
-
-TRANSPORTER_EMAIL=your_transporter_email
-TRANSPORTER_PASS=your_transporter_password_or_app_specific_password
-
-VITE_BACKEND_URL=your_backend_url
-VITE_FRONTEND_URL=your_frontend_url
-VITE_GOOGLE_CLIENT_ID=your_google_client_id
-
+# Nodemailer OTP / Feedback Email
+EMAIL_USER=your_email_address
+EMAIL_PASS=your_email_password_or_app_specific_password
 ```
 
+Create a `.env` file in the `frontend/` directory:
+```env
+VITE_BACKEND_URL=http://localhost:7000
+VITE_GOOGLE_CLIENT_ID=your_google_client_id
+```
 
 ### 4️⃣ Run the application
 **Backend:**
 ```bash
-cd server
-node app.js
+cd backend
+npm start
 ```
 **Frontend:**
 ```bash
-cd client
+cd frontend
 npm run dev
 ```
 
@@ -123,8 +119,7 @@ npm run dev
 friendsbook/
 ├── backend/         
 ├── frontend/               
-├── README.md
-└── package.json
+└── README.md
 ```
 
 ---

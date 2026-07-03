@@ -26,7 +26,7 @@ root.render(
 
         <AuthProvider>
             
-        <GoogleOAuthProvider clientId="316740076630-l3gfmjifhbrjq47lsobs434t787lrb72.apps.googleusercontent.com">
+        <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
 
         <Toaster position="top-center" reverseOrder={false} />
 
